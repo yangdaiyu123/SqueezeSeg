@@ -68,6 +68,8 @@ def train():
             # ../data/SequeezeNet/squeezenet_v1.1.pkl
             mc.PRETRAINED_MODEL_PATH = FLAGS.pretrained_model_path
             
+            # I will add finetune layer
+            
             model = SqueezeSeg(mc)
         
         # 从这里配置输入

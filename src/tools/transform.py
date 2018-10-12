@@ -49,19 +49,23 @@ def transform_test_data(rootpath=""):
 
 
 # transform training data
-def transform_training_npy(rootpath="", debug=False):
+def transform_training_npy(rootpath="", angle=90, debug=False):
     
     print rootpath
     
-    os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-    os.environ['CUDA_VISIBLE_DEVICES'] = '5'
-    
     trantool = ct.InputData()
     trantool.rootPath = rootpath
-    trantool.savePath = "npy180"
+    
+    if angle == 90:
+        trantool.savePath = "npy"
+    elif angle == 180:
+        trantool.savePath = "npy180"
+    elif angle == 360:
+        trantool.savePath = "npy360"
     
     ptsfiles = trantool.load_file_names()
     
+    # store filenames into filenames.txt
     filesname_savepath = "../../scripts/log/filenames.txt"
     with open(filesname_savepath, 'w') as f:
         for i in range(0, len(ptsfiles)):
@@ -81,7 +85,11 @@ def transform_training_npy(rootpath="", debug=False):
             data = trantool.cover_csv_to_np(file, savecsv=False)
             
             # start = time.time()
-            formatdata = trantool.generate_image_np(data, angle=180, debug=False)
+            if angle == 90 or angle == 180:
+                formatdata = trantool.generate_image_np(data, angle=angle, debug=False)
+            elif angle == 360:
+                pass
+            
             
             # npy store
             if True:
@@ -93,7 +101,15 @@ def transform_training_npy(rootpath="", debug=False):
                 
             # csv store
             if False:
-                csvpath = os.path.join("./", "image_csv", file)
+                if angle == 90:
+                    cvs_trail = "csv"
+                elif angle == 180:
+                    cvs_trail = "image_csv"
+                elif angle == 360:
+                    cvs_trail = "image_csv360"
+                    
+                csvpath = os.path.join("./", cvs_trail, file)
+                
                 if not os.path.exists(csvpath):
                     print("生成文件检查：")
                     print(csvpath)

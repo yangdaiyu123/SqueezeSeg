@@ -41,11 +41,7 @@ class InputData(object):
     def savePath(self, trail_path):
         self._savePath = os.path.join(self.rootPath, trail_path)
 
-    # 转换数据 并 生成npy文件
-    def transformData(self, filepath=""):
-        assert filepath != ""
-        
-        
+
 
     def __init__(self):
         pass
@@ -69,6 +65,86 @@ class InputData(object):
                 result.append(file)
     
         return result
+
+    # 所有子文件
+    def _filenames(self, filedir):
+        result = []
+        for root, dirs, files in os.walk(filedir):
+            # print "root: {0}".format(root)
+            # print "dirs: {0}".format(dirs)
+            # print "files: {0}".format(files)
+            result = files
+        return result
+
+    # 统计标记数量
+    def _array_flag_count(self, array, flag):
+        count = 0
+        for num in array:
+            if num == flag:
+                count += 1
+        return count
+        
+        
+        
+    def get_degree(self, x, y, z):
+    
+        sqrt_xy = np.sqrt(x ** 2 + y ** 2)
+        # sqrt_xyz = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+    
+        theta = np.arctan(z / sqrt_xy) * 180 / math.pi
+    
+        # phi
+        phi = np.arcsin(y / sqrt_xy) * 180 / math.pi
+    
+        # 调整角度
+        if y > 0:
+            phi = phi
+        else:
+            phi = phi + 180
+    
+        # print("degree: %f, %f" % (theta, phi))
+    
+        # 防止越界
+        if phi > ANGLE_PHI_MAX:
+            phi = ANGLE_PHI_MAX
+        elif phi < ANGLE_PHI_MIN:
+            phi = ANGLE_PHI_MIN
+    
+        return theta, phi
+
+    def get_point(self, theta, phi):
+    
+        # image x(height) * y(width) 2d
+        # 向下取整
+        x = int((theta - (-16)) / (32.0 / 64))
+        y = int((phi - ANGLE_PHI_MIN) / ((ANGLE_PHI_MAX - ANGLE_PHI_MIN) / 512))
+    
+        # 严防越界
+        x = (x > 63) and 63 or x
+        y = (y > 511) and 511 or y
+    
+        return x, y
+
+    def get_thetaphi(self, x, y, z):
+        theta, phi = self.get_degree(x, y, z)
+    
+        return self.get_point(theta, phi)
+
+    def get_point_theta(self, x, y, z):
+        theta, phi = self.get_degree(x, y, z)
+    
+        return self.get_point(theta, phi)[0]
+
+    def get_point_phi(self, x, y, z):
+        theta, phi = self.get_degree(x, y, z)
+    
+        return self.get_point(theta, phi)[1]
+
+    def isempty(self, x):
+        if (x == [0, 0, 0]).all():
+            return True
+        else:
+            return False
         
     
 
@@ -133,73 +209,50 @@ class InputData(object):
         return data
     
     
-    def get_degree(self, x, y, z):
-        
-        sqrt_xy = np.sqrt(x ** 2 + y ** 2)
-        # sqrt_xyz = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-        
-        theta = np.arctan(z / sqrt_xy) * 180 / math.pi
-
-        # phi
-        phi = np.arcsin(y / sqrt_xy) * 180 / math.pi
-        
-        # 调整角度
-        if y > 0:
-            phi = phi
-        else:
-            phi = phi + 180
-
-        # print("degree: %f, %f" % (theta, phi))
-
-        # 防止越界
-        if phi > ANGLE_PHI_MAX:
-            phi = ANGLE_PHI_MAX
-        elif phi < ANGLE_PHI_MIN:
-            phi = ANGLE_PHI_MIN
-        
-        return theta, phi
-        
-    
-    def get_point(self, theta, phi):
-        
-        # image x(height) * y(width) 2d
-        # 向下取整
-        x = int((theta - (-16)) / (32.0 / 64))
-        y = int((phi - ANGLE_PHI_MIN) / ((ANGLE_PHI_MAX-ANGLE_PHI_MIN) / 512))
-    
-        # 严防越界
-        x = (x > 63) and 63 or x
-        y = (y > 511) and 511 or y
-        
-        return x, y
-
-    def get_thetaphi(self, x, y, z):
-        theta, phi = self.get_degree(x, y, z)
-        
-        return self.get_point(theta, phi)
-
-    def get_point_theta(self, x, y, z):
-        theta, phi = self.get_degree(x, y, z)
-        
-        return self.get_point(theta, phi)[0]
-    
-    def get_point_phi(self, x, y, z):
-        theta, phi = self.get_degree(x, y, z)
-        
-        return self.get_point(theta, phi)[1]
-    
-
-    def isempty(self, x):
-        if (x==[0, 0, 0]).all():
-            return True
-        else:
-            return False
     
     
     # 将所有数据转换成网格需要的格式
     def generate_image_np360(self, values):
-        pass
     
+        # data collection
+        x = [data[i][0] for i in range(len(data[:, 0]))]
+        y = [data[i][1] for i in range(len(data[:, 0]))]
+        z = [data[i][2] for i in range(len(data[:, 0]))]
+    
+        intensity = [data[i][3] for i in range(len(data[:, 0]))]
+        distance = [data[i][4] for i in range(len(data[:, 0]))]
+        label = [data[i][5] for i in range(len(data[:, 0]))]
+        
+        # image with theta axis and phi axis
+        theta_point = []
+        phi_point = []
+        
+        # generate image
+        image = np.zeros((64, 512, 6), dtype=np.float16)
+
+        def store_image(index):
+            # print (theta[index], phi[index])
+    
+            image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
+            image[thetaPt[index], phiPt[index], 3] = intensity[index]
+            image[thetaPt[index], phiPt[index], 4] = distance[index]
+            image[thetaPt[index], phiPt[index], 5] = label[index]
+
+        for i in range(len(x)):
+            if x[i] < 0.5: continue  # 前向
+            if abs(y[i]) < 0.5: continue
+    
+            if self.isempty(image[thetaPt[i], phiPt[i], 0:3]):
+                store_image(i)
+            elif label[i] == image[thetaPt[i], phiPt[i], 5]:
+                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
+                    image[thetaPt[i], phiPt[i], 4] = distance[i]
+            elif image[thetaPt[i], phiPt[i], 5] == 0 and label[i] != 0:
+                store_image(i)
+            else:
+                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
+                    store_image(i)
+        
         
     # 转换成npy格式 np
     def generate_image_np(self, source, angle=90, debug=False):
@@ -270,115 +323,6 @@ class InputData(object):
         return image
     
     
-    # 转换成需要的npy格式 for循环写法
-    def generate_np_format(self, source, statistic=False):
-        
-        n = 0 #
-        max_phi, min_phi = 0, float('inf')
-        
-        cCount = [0] * 8
-        updateCount = [0] * 2
-        
-
-        # height x width x {x, y, z, intensity, range, label}
-        npy = np.zeros((64, 512, 6), dtype=np.float16)
-        
-        start = time.time()
-        for indexs in source.index:
-            
-            # 取出列表每行的值
-            values = source.loc[indexs].values[:]
-            x, y, z, i, r, c = values[0], values[1], values[2], values[3], values[4], values[5]
-        
-            if x < 0.5: continue # 前向
-            if abs(y) < 0.5: continue
-            
-            # theta -16~16 phi 45~135
-            theta, phi = self.get_degree(x, y, z)
-            
-            # 由x, y, z计算出的点
-            ptx, pty = self.get_point(theta, phi)
-            
-            
-            if not self.isempty(npy[ptx, pty, 0:3]): # 该点上已经有值
-                
-                lastpoint = npy[ptx, pty, :]
-                
-                if lastpoint[5] == 0: # 0表示不关心的点 category == 0
-                    npy[ptx, pty, :] = [x, y, z, i, r, c]
-                    updateCount[0] += 1
-                    
-                elif r < lastpoint[4]:
-                    npy[ptx, pty, :] = [x, y, z, i, r, c]
-                    updateCount[1] += 1
-                    
-
-            else:
-                npy[ptx, pty, :] = [x, y, z, i, r, c]
-                
-
-            if statistic:
-                if n == 0:
-                    print ptx, pty
-                    print 'values test: '
-                    print type(values)
-                    print (values)
-                    print (x, y, z)
-                    print theta, phi
-                    n += 1
-                    
-                # 结果统计
-                if phi > max_phi: max_phi = phi
-                if phi < min_phi: min_phi = phi
-                if c < 8: cCount[int(c)] += 1
-        end = time.time()
-        
-        if statistic:
-            # print 'point count is: %d' % (self._array_flag_count(xyflag, 1))
-            print 'duration is %s' % (end - start)
-            print 'phi max and min: %f %f' % (max_phi, min_phi)
-            print 'category count statistic: %s' % cCount
-            print 'update count statistic: %s' % updateCount
-            
-        return npy
-
-    # 所有子文件
-    def _filenames(self, filedir):
-        result = []
-        for root, dirs, files in os.walk(filedir):
-            # print "root: {0}".format(root)
-            # print "dirs: {0}".format(dirs)
-            # print "files: {0}".format(files)
-            result = files
-        return result
-    
-    # 统计标记数量
-    def _array_flag_count(self, array, flag):
-        count = 0
-        for num in array:
-            if num == flag:
-                count += 1
-        return count
-    
-import os, zipfile
-
-def zip_answers(source_dir, output_filename):
-    zipf = zipfile.ZipFile(output_filename, 'w')
-    pre_len = len(os.path.dirname(source_dir))
-    for parent, dirnames, filenames in os.walk(source_dir):
-        for filename in filenames:
-            pathfile = os.path.join(parent, filename)
-            arcname = pathfile[pre_len:].strip(os.path.sep)
-            zipf.write(pathfile, arcname)
-    zipf.close()
-
-
-if __name__ == '__main__':
-    source_dir = '/home/mengweiliang/lzh/SqueezeSeg/data/alibaba'
-    output_filename = 'answers.zip'
-    zip_answers(source_dir, output_filename)
-
-
         
 if __name__ == '__main__':
     
