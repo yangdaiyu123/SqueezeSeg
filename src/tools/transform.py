@@ -82,20 +82,26 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
         if file[-4:] == '.csv':
             prename = 'channelVELO_TOP_0000_%05d' % idx
             npyname = (prename + '.npy')
+
+            npypath = os.path.join(trantool.savePath, npyname)
+            if os.path.exists(npypath):
+                continue
+            
+            if idx == 32310:
+                print(idx)
+            
             data = trantool.cover_csv_to_np(file, savecsv=False)
             
             # start = time.time()
             if angle == 90 or angle == 180:
                 formatdata = trantool.generate_image_np(data, angle=angle, debug=False)
             elif angle == 360:
-                pass
+                # 32310
+                formatdata = trantool.generate_image_np360(data.values)
             
-            
+
             # npy store
             if True:
-                npypath = os.path.join(trantool.savePath, npyname)
-                if os.path.exists(npypath):
-                    continue
                 np.save(npypath, formatdata)
                 
                 
@@ -128,7 +134,7 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
 if __name__ == '__main__':
 
     path = "/home/mengweiliang/disk15/df314/training"
-    transform_training_npy(path)
+    transform_training_npy(path, angle=360)
 
     # testpath = "/home/mengweiliang/lzh/SqueezeSeg/data/test"
     # # testpath = '/home/mengweiliang/disk15/df314/test'

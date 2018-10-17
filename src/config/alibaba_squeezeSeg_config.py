@@ -41,11 +41,16 @@ def alibaba_squeezeSeg_config():
     asc.LCN_WIDTH = 5
     asc.RCRF_ITER = 3
     
+    # bi_angular_filters
     asc.BILATERAL_THETA_A = np.array([.9, .6, .9, .6,
                                       .9, .6, .9, .6])
     
+    # angular_filters
     asc.BILATERAL_THETA_R = np.array([.015, .01, .015, .01,
                                       .015, .01, .015, .01])
+    
+    ## angular_filter_kernel
+    
     
     asc.BI_FILTER_COEF = 0.1
     

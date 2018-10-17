@@ -27,6 +27,7 @@ def _variable_on_device(name, shape, initializer, trainable=True):
       Variable Tensor
     """
     # TODO(bichen): fix the hard-coded data type below
+    
     dtype = tf.float32
     if not callable(initializer):
         var = tf.get_variable(name, initializer=initializer, trainable=trainable)
@@ -686,6 +687,8 @@ class ModelSkeleton:
         Returns:
           outputs: tensor with shape [batch_size, zenith, azimuth, num_class].
         """
+        
+        # mc.RCRF_ITER
         assert num_iterations >= 1, 'number of iterations should >= 1'
         
         mc = self.mc

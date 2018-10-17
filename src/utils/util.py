@@ -106,7 +106,7 @@ def condensing_matrix(size_z, size_a, in_channel):
     assert size_z % 2 == 1 and size_a % 2==1, \
         'size_z and size_a should be odd number'
     
-    half_filter_dim = (size_z*size_a)//2
+    half_filter_dim = (size_z*size_a)//2 # 3 * 5
     
     # moving neigboring pixels to channel dimension
     nbr2ch_mat = np.zeros(

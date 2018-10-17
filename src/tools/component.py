@@ -209,55 +209,18 @@ class InputData(object):
         return data
     
     
-    
-    
-    # 将所有数据转换成网格需要的格式
-    def generate_image_np360(self, values):
-    
-        # data collection
-        x = [data[i][0] for i in range(len(data[:, 0]))]
-        y = [data[i][1] for i in range(len(data[:, 0]))]
-        z = [data[i][2] for i in range(len(data[:, 0]))]
-    
-        intensity = [data[i][3] for i in range(len(data[:, 0]))]
-        distance = [data[i][4] for i in range(len(data[:, 0]))]
-        label = [data[i][5] for i in range(len(data[:, 0]))]
-        
-        # image with theta axis and phi axis
-        theta_point = []
-        phi_point = []
-        
-        # generate image
-        image = np.zeros((64, 512, 6), dtype=np.float16)
-
-        def store_image(index):
-            # print (theta[index], phi[index])
-    
-            image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
-            image[thetaPt[index], phiPt[index], 3] = intensity[index]
-            image[thetaPt[index], phiPt[index], 4] = distance[index]
-            image[thetaPt[index], phiPt[index], 5] = label[index]
-
-        for i in range(len(x)):
-            if x[i] < 0.5: continue  # 前向
-            if abs(y[i]) < 0.5: continue
-    
-            if self.isempty(image[thetaPt[i], phiPt[i], 0:3]):
-                store_image(i)
-            elif label[i] == image[thetaPt[i], phiPt[i], 5]:
-                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
-                    image[thetaPt[i], phiPt[i], 4] = distance[i]
-            elif image[thetaPt[i], phiPt[i], 5] == 0 and label[i] != 0:
-                store_image(i)
-            else:
-                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
-                    store_image(i)
-        
         
     # 转换成npy格式 np
     def generate_image_np(self, source, angle=90, debug=False):
         
         data = source.values
+        if angle == 90:
+            ANGLE_PHI_MAX = 135
+            ANGLE_PHI_MIN = 45
+        elif angle == 180:
+            ANGLE_PHI_MIN = 0
+            ANGLE_PHI_MAX = 180
+        
         # print type(data)
         
         x = [data[i][0] for i in range(len(data[:, 0]))]
@@ -321,7 +284,85 @@ class InputData(object):
             print np.shape(image)
         
         return image
+
+
+    # 将所有数据转换成网格需要的格式
+    def generate_image_np360(self, values):
+
+        data = values
+
+        # data collection
+        x = [data[i][0] for i in range(len(data[:, 0]))]
+        y = [data[i][1] for i in range(len(data[:, 0]))]
+        z = [data[i][2] for i in range(len(data[:, 0]))]
+
+        intensity = [data[i][3] for i in range(len(data[:, 0]))]
+        distance = [data[i][4] for i in range(len(data[:, 0]))]
+        label = [data[i][5] for i in range(len(data[:, 0]))]
+
+        def get_image_point(x, y, z, distance):
     
+            sqrt_xy = np.sqrt(x ** 2 + y ** 2)
+            theta = np.arctan(z / sqrt_xy) * 180 / math.pi
+            phi = np.arcsin(y / sqrt_xy) * 180 / math.pi
+    
+            # print(x, y)
+            # print("(%s) ----------> " % phi)
+    
+            if x > 0 and y > 0:  # 0 - 90
+                phi = phi
+            elif x < 0 and y > 0:  # 90 -180
+                phi = 180 - phi
+            elif x < 0 and y < 0:  # 180 - 270
+                phi = 180 - phi
+            elif x > 0 and y < 0:  # 270 - 360
+                phi = phi + 360
+    
+            # print("phi is : (%s)" % phi)
+            # print()
+    
+            theta_pt = int((theta - (-16.0)) / (32.0 / 64))
+            phi_pt = int((phi - 0) / (360.0 / 512))
+    
+            # 严防越界
+            theta_pt = (theta_pt > 63) and 63 or theta_pt
+            phi_pt = (phi_pt > 511) and 511 or phi_pt
+    
+            return theta_pt, phi_pt
+
+        # image with theta axis and phi axis
+        thetaPt = [get_image_point(x[i], y[i], z[i], distance[i])[0] \
+                   for i in range(len(data[:, 0]))]  #
+        phiPt = [get_image_point(x[i], y[i], z[i], distance[i])[1] \
+                 for i in range(len(data[:, 0]))]
+
+        # generate image
+        image = np.zeros((64, 512, 6), dtype=np.float16)
+
+        def store_image(index):
+            # print (theta[index], phi[index])
+    
+            image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
+            image[thetaPt[index], phiPt[index], 3] = intensity[index]
+            image[thetaPt[index], phiPt[index], 4] = distance[index]
+            image[thetaPt[index], phiPt[index], 5] = label[index]
+
+        for i in range(len(x)):
+            if abs(x[i]) < 0.5: continue
+            if abs(y[i]) < 0.5: continue
+    
+            if self.isempty(image[thetaPt[i], phiPt[i], 0:3]):
+                store_image(i)
+            elif label[i] == image[thetaPt[i], phiPt[i], 5]:
+                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
+                    image[thetaPt[i], phiPt[i], 4] = distance[i]
+            elif image[thetaPt[i], phiPt[i], 5] == 0 and label[i] != 0:
+                store_image(i)
+            else:
+                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
+                    store_image(i)
+
+        return image
     
         
 if __name__ == '__main__':
