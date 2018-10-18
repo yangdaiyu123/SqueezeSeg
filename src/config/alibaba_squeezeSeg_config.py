@@ -60,8 +60,8 @@ def alibaba_squeezeSeg_config():
     asc.ANG_FILTER_COEF = 0.02
 
     asc.CLS_LOSS_COEF = 15.0
-    asc.WEIGHT_DECAY = 0.0008 # 0.0001
-    asc.LEARNING_RATE = 0.01 # origin 0.01
+    asc.WEIGHT_DECAY = 0.0001 # 0.0001
+    asc.LEARNING_RATE = 0.00001 # origin 0.01
     asc.DECAY_STEPS = 10000
     asc.MAX_GRAD_NORM = 1.0
     asc.MOMENTUM = 0.9
