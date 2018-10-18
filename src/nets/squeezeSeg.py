@@ -13,6 +13,8 @@ import joblib
 from utils import util
 import numpy as np
 import tensorflow as tf
+
+
 from nn_skeleton import ModelSkeleton
 
 class SqueezeSeg(ModelSkeleton):
