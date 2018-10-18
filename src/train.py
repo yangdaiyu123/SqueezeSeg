@@ -73,11 +73,13 @@ def train():
 
         # saver = tf.train.Saver(tf.all_variables())
         # saver = tf.train.Saver(model.model_params)
-        
         # init = tf.initialize_all_variables()
+
+        # vars = tf.initialize_all_variables()
+        vars = tf.global_variables_initializer()
         
         sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-        sess.run(tf.global_variables_initializer())
+        sess.run(vars)
         
 
         saver = tf.train.Saver(tf.global_variables())

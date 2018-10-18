@@ -9,7 +9,7 @@ from __future__ import print_function
 import os
 import sys
 
-from utils import util
+from src.utils import util
 import numpy as np
 import tensorflow as tf
 
