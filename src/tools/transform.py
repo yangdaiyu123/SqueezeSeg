@@ -8,6 +8,8 @@ import numpy as np
 import os
 import time
 
+from component import InputData
+
 def save_names_file(rootpath, save_file):
     
     tools = ct.InputData()
@@ -53,8 +55,8 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
     
     print rootpath
     
-    trantool = ct.InputData()
-    trantool.rootPath = rootpath
+    trantool = ct.InputData(rootpath)
+    # trantool.rootPath = rootpath
     
     if angle == 90:
         trantool.savePath = "npy"
@@ -129,13 +131,55 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
                 if np.shape(formatdata) == (64, 512, 6):
                     print '%s 已生成' % npypath
 
+#
+def transform_8_to_4_npy(savepath="", angle=90, debug=False):
+    print savepath
+    
+    if angle == 90:
+        source_path = "/home/mengweiliang/disk15/df314/training/npy"
+    elif angle == 180:
+        source_path = "/home/mengweiliang/disk15/df314/training/npy180"
+    elif angle == 360:
+        source_path = "/home/mengweiliang/disk15/df314/training/npy360"
+
+    inputTool = InputData(source_path)
+    filesname = inputTool.load_file_names(subpath="")
+    
+    for name in filesname:
+        filePath = os.path.join(source_path, name)
+        npydata = np.load(filePath)
+        
+        
+        def label_trans(x, y, label):
+            
+            if label == 3 or label == 4:
+                npydata[x][y][5] = 1
+            elif label == 1 or label == 2:
+                npydata[x][y][5] = 3
+            elif label == 5 or label == 6:
+                npydata[x][y][5] = 2
+            else:
+                npydata[x][y][5] = 0
+        
+        [label_trans(x, y, npydata[x][y][5]) for x in range(64) for y in range(512)]
+        
+        save_path = os.path.join(savepath, "{}-{}.npy".format(name[:-4],angle))
+        if not os.path.exists(save_path):
+            np.save(save_path, npydata)
+        else:
+            continue
+    
                 
         
 if __name__ == '__main__':
 
-    path = "/home/mengweiliang/disk15/df314/training"
-    transform_training_npy(path, angle=360)
+    # path = "/home/mengweiliang/disk15/df314/training"
+    # transform_training_npy(path, angle=360)
 
+
+    npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster"
+    transform_8_to_4_npy(npy_cluster, angle=360)
+    
     # testpath = "/home/mengweiliang/lzh/SqueezeSeg/data/test"
     # # testpath = '/home/mengweiliang/disk15/df314/test'
     #

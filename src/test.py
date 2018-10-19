@@ -29,9 +29,15 @@ import pandas as pd
 
 FLAGS = tf.app.flags.FLAGS
 
+# tf.app.flags.DEFINE_string(
+#     'checkpoint', '../scripts/log/train/model.ckpt-75000',
+#     """Path to the model parameter file.""")
+
+
 tf.app.flags.DEFINE_string(
-    'checkpoint', '../scripts/log/train/model.ckpt-75000',
+    'checkpoint', '../data/SqueezeSeg/model.ckpt-23000',
     """Path to the model parameter file.""")
+
 tf.app.flags.DEFINE_string(
     'input_path', '../data/test/npy/*',
     """Input lidar scan to be detected. Can process glob input such as """
@@ -59,7 +65,8 @@ def test():
         mc.BATCH_SIZE = 1  # TODO(bichen): fix this hard-coded batch size.
         model = SqueezeSeg(mc)
         
-        saver = tf.train.Saver(model.model_params)
+        # saver = tf.train.Saver(model.model_params)
+        saver = tf.train.Saver(tf.global_variables())
         
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
             saver.restore(sess, FLAGS.checkpoint)

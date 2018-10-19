@@ -330,10 +330,10 @@ class ModelSkeleton:
     
         Args:
           layer_name: layer name.
-          inputs: input tensor
-          filters: number of output filters.
-          size: kernel size.
-          stride: stride
+          inputs: input tensor # (32, 64, 512, 5)
+          filters: number of output filters. # 64
+          size: kernel size. # 3
+          stride: stride # 2
           padding: 'SAME' or 'VALID'. See tensorflow doc for detailed description.
           freeze: if true, then do not train the parameters in this layer.
           xavier: whether to use xavier weight initializer or not.
@@ -351,8 +351,7 @@ class ModelSkeleton:
                 kernel_val = np.transpose(cw[layer_name][0], [2,3,1,0])
                 bias_val = cw[layer_name][1]
                 # check the shape
-                if (kernel_val.shape ==
-                    (size, size, inputs.get_shape().as_list()[-1], filters)) \
+                if (kernel_val.shape == (size, size, inputs.get_shape().as_list()[-1], filters)) \
                         and (bias_val.shape == (filters, )):
                     use_pretrained_param = True
                 else:

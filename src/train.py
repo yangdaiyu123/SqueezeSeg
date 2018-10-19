@@ -30,15 +30,20 @@ tf.app.flags.DEFINE_string('dataset', 'KITTI',
 tf.app.flags.DEFINE_string('data_path', '../data/', """Root directory of data""")
 tf.app.flags.DEFINE_string('image_set', 'train',
                            """ Can be train, trainval, val, or test""")
-tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train_finetune',
-                           """Directory where to write event logs """
-                           """and checkpoint.""")
+
+
 tf.app.flags.DEFINE_integer('max_steps', 25000,
                             """Maximum number of batches to run.""")
 tf.app.flags.DEFINE_string('net', 'squeezeSeg',
                            """Neural net architecture. """)
+
 tf.app.flags.DEFINE_string('pretrained_model_path', '../data/SqueezeNet/squeezenet_v1.1.pkl',
                            """Path to the pretrained model.""")
+tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train_finetune',
+                           """Directory where to write event logs """
+                           """and checkpoint.""")
+
+
 tf.app.flags.DEFINE_integer('summary_step', 100,
                             """Number of steps to save summary.""")
 tf.app.flags.DEFINE_integer('checkpoint_step', 1000,
@@ -66,9 +71,9 @@ def train():
             model = SqueezeSeg(mc)
         
         imdb = kitti(FLAGS.image_set, FLAGS.data_path, mc)
-    
 
-        
+
+        saver = tf.train.Saver(model.model_params)
         summary_op = tf.summary.merge_all()
 
         # saver = tf.train.Saver(tf.all_variables())
@@ -82,8 +87,6 @@ def train():
         sess.run(vars)
         
 
-        saver = tf.train.Saver(tf.global_variables())
-        
         DEBUG = False
         if DEBUG:
             initial_step = 0
@@ -94,7 +97,9 @@ def train():
                 initial_step = int(ckpt.model_checkpoint_path.rsplit('-', 1)[1])
             
         else:
-            saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
+            # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
+            saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
+
 
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
 

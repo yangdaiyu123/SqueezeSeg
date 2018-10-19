@@ -43,13 +43,14 @@ class InputData(object):
 
 
 
-    def __init__(self):
+    def __init__(self, path):
+        self.rootPath = path
         pass
 
     # 加载所有的文件名
-    def load_file_names(self):
+    def load_file_names(self, subpath="pts"):
         assert self.rootPath != "", "root path is empty"
-        rootname = self.rootPath + '/pts'
+        rootname = self.rootPath + '/' + subpath
 
         return self.load_subnames(rootname)
     

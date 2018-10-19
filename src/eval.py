@@ -28,10 +28,12 @@ tf.app.flags.DEFINE_string('data_path', '',
                            """Root directory of data""")
 tf.app.flags.DEFINE_string('image_set', 'val',
                            """Can be train, trainval, val, or test""")
+
 tf.app.flags.DEFINE_string('eval_dir', '../scripts/log/eval_val',
                            """Directory where to write event logs """)
-tf.app.flags.DEFINE_string('checkpoint_path', '../scripts/log/train',
+tf.app.flags.DEFINE_string('checkpoint_path', '../scripts/log/train_finetune',
                            """Path to the training checkpoint.""")
+
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
                             """How often to check if new cpt is saved.""")
 tf.app.flags.DEFINE_boolean('run_once', False,
