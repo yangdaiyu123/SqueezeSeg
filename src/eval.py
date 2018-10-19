@@ -195,6 +195,7 @@ def evaluate():
             eval_summary_ops.append(tf.summary.scalar(sm, ph))
         
         saver = tf.train.Saver(model.model_params)
+        # saver = tf.train.Saver(tf.global_variables())
         
         summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
         

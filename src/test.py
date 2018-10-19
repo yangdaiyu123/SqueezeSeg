@@ -150,6 +150,7 @@ def test():
                 
                 if not os.path.exists(file_path):
                     pdata[['category']].astype('int32').to_csv(file_path, index=None, header=None)
+
                 # np.save(
                 #     os.path.join(FLAGS.out_dir, 'pred_' + file_name + '.npy'),
                 #     pred_cls[0]

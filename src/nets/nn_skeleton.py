@@ -1,3 +1,4 @@
+#-*- coding=utf-8 -*-
 # Author: Bichen Wu (bichen@berkeley.edu) 02/20/2017
 
 """Neural network model base class."""
@@ -9,7 +10,7 @@ from __future__ import print_function
 import os
 import sys
 
-from src.utils import util
+from utils import util
 import numpy as np
 import tensorflow as tf
 
@@ -712,7 +713,8 @@ class ModelSkeleton:
             )
             self._activation_summary(angular_compat_kernel, 'angular_compat_mat')
             
-            # self.model_params += [bi_compat_kernel, angular_compat_kernel]
+            # 最后一层参数
+            self.model_params += [bi_compat_kernel, angular_compat_kernel]
             
             condensing_kernel = tf.constant(
                 util.condensing_matrix(sizes[0], sizes[1], mc.NUM_CLASS),

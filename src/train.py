@@ -87,15 +87,13 @@ def train():
         sess.run(vars)
         
 
-        DEBUG = False
-        if DEBUG:
-            initial_step = 0
-            ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
-            
-            if ckpt and ckpt.model_checkpoint_path:
-                saver.restore(sess, ckpt.model_checkpoint_path)
-                initial_step = int(ckpt.model_checkpoint_path.rsplit('-', 1)[1])
-            
+        initial_step = 0
+        ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
+
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            initial_step = int(ckpt.model_checkpoint_path.rsplit('-', 1)[1])
+            print("current setp is %d" % initial_step)
         else:
             # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
             saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
@@ -226,9 +224,9 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
-    if tf.gfile.Exists(FLAGS.train_dir):
-        tf.gfile.DeleteRecursively(FLAGS.train_dir)
-    tf.gfile.MakeDirs(FLAGS.train_dir)
+    # if tf.gfile.Exists(FLAGS.train_dir):
+    #     tf.gfile.DeleteRecursively(FLAGS.train_dir)
+    # tf.gfile.MakeDirs(FLAGS.train_dir)
     train()
 
 
