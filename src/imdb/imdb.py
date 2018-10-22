@@ -15,8 +15,8 @@ class imdb(object):
     """Image database."""
     
     start_index = 0
-    total_count = 20000
-    train_count = 18000
+    total_count = 50000
+    train_count = 40000
     
     def __init__(self, name, mc):
         self._name = name

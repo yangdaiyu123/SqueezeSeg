@@ -146,10 +146,27 @@ def test():
                 # print(file_name)
                 # print(pred_cls)
 
-                pdata = pd.DataFrame(np.reshape(result, (-1, 1)),columns=['category'])
+                pdata = np.reshape(result, (-1, 1))
                 
+                def label_trans(index, label):
+                    if label == 0:
+                        pdata[index][0] = 0
+                    elif label == 1:
+                        pdata[index][0] = 3
+                    elif label == 2:
+                        pdata[index][0] = 5
+                    elif label == 3:
+                        pdata[index][0] = 1
+    
+    
+                # 还原
+                count = np.shape(pdata)[0]
+                [label_trans(i, pdata[i][0]) for i in range(count)]
+                
+                
+                cvsdata = pd.DataFrame(pdata, columns=['category'])
                 if not os.path.exists(file_path):
-                    pdata[['category']].astype('int32').to_csv(file_path, index=None, header=None)
+                    cvsdata[['category']].astype('int32').to_csv(file_path, index=None, header=None)
 
                 # np.save(
                 #     os.path.join(FLAGS.out_dir, 'pred_' + file_name + '.npy'),
