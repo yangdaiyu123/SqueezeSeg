@@ -92,7 +92,9 @@ def train():
 
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
-            initial_step = int(ckpt.model_checkpoint_path.rsplit('-', 1)[1])
+            steps = ckpt.model_checkpoint_path.rsplit('-', 1)
+            print(steps)
+            initial_step = int(steps[-1])
             print("current setp is %d" % initial_step)
         else:
             # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')

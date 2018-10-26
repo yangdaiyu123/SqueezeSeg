@@ -35,7 +35,9 @@ FLAGS = tf.app.flags.FLAGS
 
 
 tf.app.flags.DEFINE_string(
-    'checkpoint', '../data/SqueezeSeg/model.ckpt-23000',
+    # ../scripts/log/train_finetune/model.ckpt-21000
+    # ../data/SqueezeSeg/model.ckpt-23000
+    'checkpoint', '../scripts/log/train_finetune/model.ckpt-21000',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
@@ -43,8 +45,11 @@ tf.app.flags.DEFINE_string(
     """Input lidar scan to be detected. Can process glob input such as """
     """./data/samples/*.npy or single input.""")
 
+# ../scripts/log/answers/
+#
 tf.app.flags.DEFINE_string(
-    'out_dir', '../scripts/log/answers/', """Directory to dump output.""")
+    'out_dir', '../scripts/log/answers_finetune/',
+    """Directory to dump output.""")
 tf.app.flags.DEFINE_string('gpu', '4', """gpu id.""")
 
 
