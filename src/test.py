@@ -37,18 +37,18 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     # ../scripts/log/train_finetune/model.ckpt-21000
     # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../scripts/log/train_finetune/model.ckpt-21000',
+    'checkpoint', '../data/SqueezeSeg/model.ckpt-23000',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
-    'input_path', '../data/test/npy/*',
+    'input_path', '../data/test2/npy/*',
     """Input lidar scan to be detected. Can process glob input such as """
     """./data/samples/*.npy or single input.""")
 
 # ../scripts/log/answers/
-#
+# answers_finetune
 tf.app.flags.DEFINE_string(
-    'out_dir', '../scripts/log/answers_finetune/',
+    'out_dir', '../scripts/log/answers/',
     """Directory to dump output.""")
 tf.app.flags.DEFINE_string('gpu', '4', """gpu id.""")
 
@@ -153,15 +153,16 @@ def test():
 
                 pdata = np.reshape(result, (-1, 1))
                 
-                def label_trans(index, label):
-                    if label == 0:
-                        pdata[index][0] = 0
-                    elif label == 1:
-                        pdata[index][0] = 3
-                    elif label == 2:
-                        pdata[index][0] = 5
-                    elif label == 3:
-                        pdata[index][0] = 1
+                def label_trans(index, label, squeeze_seg=False):
+                    if squeeze_seg:
+                        if label == 0:
+                            pdata[index][0] = 0
+                        elif label == 1:
+                            pdata[index][0] = 3
+                        elif label == 2:
+                            pdata[index][0] = 5
+                        elif label == 3:
+                            pdata[index][0] = 1
     
     
                 # 还原

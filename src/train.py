@@ -39,7 +39,7 @@ tf.app.flags.DEFINE_string('net', 'squeezeSeg',
 
 tf.app.flags.DEFINE_string('pretrained_model_path', '../data/SqueezeNet/squeezenet_v1.1.pkl',
                            """Path to the pretrained model.""")
-tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train_finetune',
+tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
 
@@ -98,8 +98,8 @@ def train():
             print("current setp is %d" % initial_step)
         else:
             # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
-            saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
-
+            # saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
+            pass
 
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
 

@@ -26,10 +26,10 @@ def transform_test_data(rootpath=""):
     
     print "test root path is {0}".format(rootpath)
     
-    tools = ct.InputData()
-    tools.rootPath = rootpath
-    
-    test_name_path = rootpath + "/intensity"
+    tools = ct.InputData(rootpath)
+    tools.savePath = 'npy/'
+
+    test_name_path = rootpath + "/intensity_2"
     test_file_names = tools.load_subnames(test_name_path)
     
     for index, file_name in enumerate(test_file_names):
@@ -40,10 +40,11 @@ def transform_test_data(rootpath=""):
             if os.path.exists(npypath):
                 continue
             
-            data = tools.cover_csv_to_np(file_name)
+            data = tools.cover_csv_to_np(file_name,
+                                         intensitydirname='intensity_2', ptsdirname='pts_2')
             # formatdata = tools.generate_image_np(data, debug=False)
             result = data.values
-            print np.shape(result)
+            # print np.shape(result)
             np.save(npypath, result)
             
             # if np.shape(formatdata) == (64, 512, 6):
@@ -177,18 +178,18 @@ if __name__ == '__main__':
     # transform_training_npy(path, angle=360)
 
 
-    npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster"
-    transform_8_to_4_npy(npy_cluster, angle=360)
+    # npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster"
+    # transform_8_to_4_npy(npy_cluster, angle=360)
     
-    # testpath = "/home/mengweiliang/lzh/SqueezeSeg/data/test"
-    # # testpath = '/home/mengweiliang/disk15/df314/test'
-    #
-    # test_name_path = testpath + "/intensity"
-    # save_path = "../../scripts/testnames.txt"
-    #
-    # # save test file names
-    # if not os.path.exists(save_path):
-    #     save_names_file(test_name_path, save_path)
+    testpath = "/home/mengweiliang/lzh/SqueezeSeg/data/test2"
+    # testpath = '/home/mengweiliang/disk15/df314/test'
+
+    test_name_path = testpath + "/intensity_2"
+    save_path = "../../scripts/testnames.txt"
+
+    # save test file names
+    if not os.path.exists(save_path):
+        save_names_file(test_name_path, save_path)
 
 
-    # transform_test_data(testpath)
+    transform_test_data(testpath)
