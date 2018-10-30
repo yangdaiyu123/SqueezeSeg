@@ -37,7 +37,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     # ../scripts/log/train_finetune/model.ckpt-21000
     # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../data/SqueezeSeg/model.ckpt-23000',
+    'checkpoint', '../scripts/log/train/model.ckpt-24999',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
@@ -70,8 +70,8 @@ def test():
         mc.BATCH_SIZE = 1  # TODO(bichen): fix this hard-coded batch size.
         model = SqueezeSeg(mc)
         
-        # saver = tf.train.Saver(model.model_params)
-        saver = tf.train.Saver(tf.global_variables())
+        saver = tf.train.Saver(model.model_params)
+        # saver = tf.train.Saver(tf.global_variables())
         
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
             saver.restore(sess, FLAGS.checkpoint)
