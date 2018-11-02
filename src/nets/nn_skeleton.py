@@ -347,7 +347,10 @@ class ModelSkeleton:
         mc = self.mc
         use_pretrained_param = False
         if mc.LOAD_PRETRAINED_MODEL:
+            
+            # caffe model weight
             cw = self.caffemodel_weight
+            
             if layer_name in cw:
                 kernel_val = np.transpose(cw[layer_name][0], [2,3,1,0])
                 bias_val = cw[layer_name][1]

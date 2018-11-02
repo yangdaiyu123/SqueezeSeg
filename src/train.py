@@ -46,7 +46,7 @@ tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train',
 
 tf.app.flags.DEFINE_integer('summary_step', 100,
                             """Number of steps to save summary.""")
-tf.app.flags.DEFINE_integer('checkpoint_step', 1000,
+tf.app.flags.DEFINE_integer('checkpoint_step', 5000,
                             """Number of steps to save summary.""")
 tf.app.flags.DEFINE_string('gpu', '1', """gpu id.""")
 
@@ -98,7 +98,7 @@ def train():
             print("current setp is %d" % initial_step)
         else:
             # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
-            # saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
+            saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
             pass
 
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
@@ -225,9 +225,9 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
-    if tf.gfile.Exists(FLAGS.train_dir):
-        tf.gfile.DeleteRecursively(FLAGS.train_dir)
-    tf.gfile.MakeDirs(FLAGS.train_dir)
+    # if tf.gfile.Exists(FLAGS.train_dir):
+    #     tf.gfile.DeleteRecursively(FLAGS.train_dir)
+    # tf.gfile.MakeDirs(FLAGS.train_dir)
     train()
 
 

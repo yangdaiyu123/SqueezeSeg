@@ -19,7 +19,7 @@ class kitti(imdb):
         # self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
         # self._gta_2d_path = os.path.join(self._data_root_path, 'gta')
         
-        self._work_dir = 'npy_cluster90'
+        self._work_dir = 'npy_cluster360'
         
         # lidar_2d path with npy
         self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')

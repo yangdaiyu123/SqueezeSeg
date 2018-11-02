@@ -20,6 +20,8 @@ from imdb import kitti
 from utils.util import *
 from nets import *
 
+from tqdm import tqdm
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('dataset', 'KITTI',
@@ -86,7 +88,7 @@ def eval_once(
         ofn_sum = np.zeros(mc.NUM_CLASS)
         ofp_sum = np.zeros(mc.NUM_CLASS)
         
-        for i in xrange(int(num_images/mc.BATCH_SIZE)):
+        for i in tqdm(xrange(int(num_images/mc.BATCH_SIZE))):
             offset = max((i+1)*mc.BATCH_SIZE - num_images, 0)
             
             _t['read'].tic()
@@ -120,12 +122,12 @@ def eval_once(
             
             _t['eval'].toc()
             
-            print ('detect: {:d}/{:d} im_read: {:.3f}s '
-                   'detect: {:.3f}s evaluation: {:.3f}s'.format(
-                (i+1)*mc.BATCH_SIZE-offset, num_images,
-                _t['read'].average_time/mc.BATCH_SIZE,
-                _t['detect'].average_time/mc.BATCH_SIZE,
-                _t['eval'].average_time/mc.BATCH_SIZE))
+            # print ('detect: {:d}/{:d} im_read: {:.3f}s '
+            #        'detect: {:.3f}s evaluation: {:.3f}s'.format(
+            #     (i+1)*mc.BATCH_SIZE-offset, num_images,
+            #     _t['read'].average_time/mc.BATCH_SIZE,
+            #     _t['detect'].average_time/mc.BATCH_SIZE,
+            #     _t['eval'].average_time/mc.BATCH_SIZE))
         
         ious = tp_sum.astype(np.float)/(tp_sum + fn_sum + fp_sum + mc.DENOM_EPSILON)
         pr = tp_sum.astype(np.float)/(tp_sum + fp_sum + mc.DENOM_EPSILON)
