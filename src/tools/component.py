@@ -41,9 +41,8 @@ class InputData(object):
     def savePath(self, trail_path):
         self._savePath = os.path.join(self.rootPath, trail_path)
 
-
-
-    def __init__(self, path):
+    
+    def __init__(self, path=''):
         self.rootPath = path
         pass
 
@@ -209,12 +208,28 @@ class InputData(object):
     
         return data
     
-    
+    # testing transform npy
+    def testing_image_np(self, source):
+        
+        assert type(source) == np.ndarray, "source is not a ndarray type!!!"
+        
+        data = source
+        
+        
+
+
+        
+        
         
     # 转换成npy格式 np
     def generate_image_np(self, source, angle=90, debug=False):
         
-        data = source.values
+        # print(type(source))
+        if type(source) == np.ndarray:
+            data = source
+        else:
+            data = source.values
+        
         if angle == 90:
             ANGLE_PHI_MAX = 135
             ANGLE_PHI_MIN = 45
@@ -238,9 +253,15 @@ class InputData(object):
         
         # 生成数据 phi * theta * [x, y, z, i, r, c]
         image = np.zeros((64, 512, 6), dtype=np.float16)
-        
+
+        indexes = []
+        points = []
+        map = {}
         def store_image(index):
             # print (theta[index], phi[index])
+            indexes.append(index)
+            point = (thetaPt[i], phiPt[i])
+            points.append(point)
             
             image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
             image[thetaPt[index], phiPt[index], 3] = intensity[index]

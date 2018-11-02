@@ -49,7 +49,7 @@ def transform_test_data(rootpath=""):
             
             # if np.shape(formatdata) == (64, 512, 6):
             #     print '%s has generated' % (npypath)
-
+            
 
 # transform training data
 def transform_training_npy(rootpath="", angle=90, debug=False):
@@ -65,23 +65,42 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
         trantool.savePath = "npy180"
     elif angle == 360:
         trantool.savePath = "npy360"
+        
+    elif angle == -1:
+        trantool.savePath = 'npy_whole'
+    else:
+        trantool.savePath = "npy_origin"
+        
+    print('save path is :' + trantool.savePath)
     
-    ptsfiles = trantool.load_file_names()
+    # ptsfiles = trantool.load_file_names()
+
+    filesname_savepath = "../../scripts/log/filenames.txt"
+    # read filenames from filenames.txt
+    ptsfiles = []
+    with open(filesname_savepath, 'r') as f:
+        line = f.readline()
+        while line:
+            line = line[:-1]
+            ptsfiles.append(line)
+            line = f.readline()
+        f.close()
     
     # store filenames into filenames.txt
-    filesname_savepath = "../../scripts/log/filenames.txt"
-    with open(filesname_savepath, 'w') as f:
-        for i in range(0, len(ptsfiles)):
-            context = ptsfiles[i] + '\n'
-            f.write(context)
-        f.close()
+    # with open(filesname_savepath, 'w') as f:
+    #     for i in range(0, len(ptsfiles)):
+    #         context = ptsfiles[i] + '\n'
+    #         f.write(context)
+    #     f.close()
     
     
     idx = 0
     NUM_CLASS = 8
+    
     for file in ptsfiles:
         # print '正在转换 file ：%s  ......' % file
         idx += 1
+        
         if file[-4:] == '.csv':
             prename = 'channelVELO_TOP_0000_%05d' % idx
             npyname = (prename + '.npy')
@@ -101,7 +120,11 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
             elif angle == 360:
                 # 32310
                 formatdata = trantool.generate_image_np360(data.values)
-            
+                
+            elif angle == -1:
+                formatdata = np.reshape(data, (-1, 6))
+            else:
+                formatdata = np.reshape(data.values[:32768, :6], (64, 512, 6))
 
             # npy store
             if True:
@@ -144,52 +167,59 @@ def transform_8_to_4_npy(savepath="", angle=90, debug=False):
         source_path = "/home/mengweiliang/disk15/df314/training/npy360"
 
     inputTool = InputData(source_path)
-    filesname = inputTool.load_file_names(subpath="")
+    # filesname = inputTool.load_file_names(subpath="")
     
-    for name in filesname:
-        filePath = os.path.join(source_path, name)
-        npydata = np.load(filePath)
+    for i in range(50000):
+    
+        filename = 'channelVELO_TOP_0000_%05d.npy' % (i+1)
         
+        filePath = os.path.join(source_path, filename)
+        save_path = os.path.join(savepath, "{}-{}.npy".format(filename[:-4], angle))
         
+        if os.path.exists(save_path):
+            print(save_path)
+            continue
+
         def label_trans(x, y, label):
             
             if label == 3 or label == 4:
                 npydata[x][y][5] = 1
             elif label == 1 or label == 2:
                 npydata[x][y][5] = 3
-            elif label == 5 or label == 6:
+            elif label == 5 or label == 6 or label == 7:
                 npydata[x][y][5] = 2
             else:
                 npydata[x][y][5] = 0
-        
+
+        # transform data
+        npydata = np.load(filePath)
         [label_trans(x, y, npydata[x][y][5]) for x in range(64) for y in range(512)]
         
-        save_path = os.path.join(savepath, "{}-{}.npy".format(name[:-4],angle))
+        # save data
         if not os.path.exists(save_path):
             np.save(save_path, npydata)
-        else:
-            continue
+
     
                 
         
 if __name__ == '__main__':
 
-    # path = "/home/mengweiliang/disk15/df314/training"
-    # transform_training_npy(path, angle=360)
+    path = "/home/mengweiliang/disk15/df314/training"
+    transform_training_npy(path, angle=-1)
 
-
-    # npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster"
+    # cluster 8 to 4 class
+    # npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster360"
     # transform_8_to_4_npy(npy_cluster, angle=360)
     
-    testpath = "/home/mengweiliang/lzh/SqueezeSeg/data/test2"
-    # testpath = '/home/mengweiliang/disk15/df314/test'
-
-    test_name_path = testpath + "/intensity_2"
-    save_path = "../../scripts/testnames.txt"
-
-    # save test file names
-    if not os.path.exists(save_path):
-        save_names_file(test_name_path, save_path)
-
-
-    transform_test_data(testpath)
+    # testpath = "/home/mengweiliang/lzh/SqueezeSeg/data/test2"
+    # # testpath = '/home/mengweiliang/disk15/df314/test'
+    #
+    # test_name_path = testpath + "/intensity_2"
+    # save_path = "../../scripts/testnames.txt"
+    #
+    # # save test file names
+    # if not os.path.exists(save_path):
+    #     save_names_file(test_name_path, save_path)
+    #
+    #
+    # transform_test_data(testpath)

@@ -25,14 +25,14 @@ from nets import *
 
 FLAGS = tf.app.flags.FLAGS
 
+tf.app.flags.DEFINE_string('data_path', '../data/', """Root directory of data""")
 tf.app.flags.DEFINE_string('dataset', 'KITTI',
                            """Currently only support KITTI dataset.""")
-tf.app.flags.DEFINE_string('data_path', '../data/', """Root directory of data""")
 tf.app.flags.DEFINE_string('image_set', 'train',
                            """ Can be train, trainval, val, or test""")
 
 
-tf.app.flags.DEFINE_integer('max_steps', 25000,
+tf.app.flags.DEFINE_integer('max_steps', 50000,
                             """Maximum number of batches to run.""")
 tf.app.flags.DEFINE_string('net', 'squeezeSeg',
                            """Neural net architecture. """)
@@ -66,20 +66,20 @@ def train():
         
         if FLAGS.net == 'squeezeSeg':
             mc = alibaba_squeezeSeg_config()
-            
             mc.PRETRAINED_MODEL_PATH = FLAGS.pretrained_model_path
+            
             model = SqueezeSeg(mc)
+            
         
         imdb = kitti(FLAGS.image_set, FLAGS.data_path, mc)
-
-
-        saver = tf.train.Saver(model.model_params)
-        summary_op = tf.summary.merge_all()
+        print("\n data path: " + imdb._ali_path)
+        print("train_dir :" + FLAGS.train_dir +'\n')
+        
 
         # saver = tf.train.Saver(tf.all_variables())
-        # saver = tf.train.Saver(model.model_params)
-        # init = tf.initialize_all_variables()
-
+        saver = tf.train.Saver(model.model_params)
+        summary_op = tf.summary.merge_all()
+        
         # vars = tf.initialize_all_variables()
         vars = tf.global_variables_initializer()
         
@@ -147,10 +147,9 @@ def train():
                         summary_op
                     ]
                     
-                    lidar_per_batch, \
-                    lidar_mask_per_batch, \
-                    label_per_batch, \
-                    _, loss_value, pred_cls, summary_str = sess.run(op_list, options=run_options)
+                    lidar_per_batch, lidar_mask_per_batch, label_per_batch, \
+                    _, loss_value, pred_cls, summary_str \
+                    = sess.run(op_list, options=run_options)
                     
                     label_image = visualize_seg(label_per_batch[:6, :, :], mc)
                     pred_image = visualize_seg(pred_cls[:6, :, :], mc)
@@ -226,9 +225,9 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
-    # if tf.gfile.Exists(FLAGS.train_dir):
-    #     tf.gfile.DeleteRecursively(FLAGS.train_dir)
-    # tf.gfile.MakeDirs(FLAGS.train_dir)
+    if tf.gfile.Exists(FLAGS.train_dir):
+        tf.gfile.DeleteRecursively(FLAGS.train_dir)
+    tf.gfile.MakeDirs(FLAGS.train_dir)
     train()
 
 

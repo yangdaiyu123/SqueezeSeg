@@ -31,7 +31,7 @@ tf.app.flags.DEFINE_string('image_set', 'val',
 
 tf.app.flags.DEFINE_string('eval_dir', '../scripts/log/eval_val',
                            """Directory where to write event logs """)
-tf.app.flags.DEFINE_string('checkpoint_path', '../scripts/log/train_finetune',
+tf.app.flags.DEFINE_string('checkpoint_path', '../scripts/log/train',
                            """Path to the training checkpoint.""")
 
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
@@ -58,6 +58,10 @@ def eval_once(
         
         mc = model.mc
         mc.DATA_AUGMENTATION = False
+
+        print("\ndata path: " + imdb._ali_path)
+        print("checkpoint_path :" + FLAGS.checkpoint_path)
+        print("eval_dir :" + FLAGS.eval_dir +'\n')
         
         num_images = len(imdb.image_idx)
         
