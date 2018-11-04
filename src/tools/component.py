@@ -17,11 +17,16 @@ class OutputData(object):
     @modelPath.setter
     def modelPath(self, path):
         self._modelPath = path
-    
+
+
+
         
-ANGLE_PHI_MAX = 180.0
+ANGLE_PHI_MAX = 360.0
 ANGLE_PHI_MIN = 0.0
-    
+
+ANGLE_THETA_MAX = 16.0
+ANGLE_THETA_MIN = -16.0
+
 class InputData(object):
     
     # 数据根目录
@@ -83,9 +88,9 @@ class InputData(object):
             if num == flag:
                 count += 1
         return count
-        
-        
-        
+
+    
+    
     def get_degree(self, x, y, z):
     
         sqrt_xy = np.sqrt(x ** 2 + y ** 2)
@@ -96,19 +101,25 @@ class InputData(object):
         # phi
         phi = np.arcsin(y / sqrt_xy) * 180 / math.pi
     
+        # print(theta, phi)
+    
         # 调整角度
         if y > 0:
             phi = phi
         else:
             phi = phi + 180
-    
+        
         # print("degree: %f, %f" % (theta, phi))
-    
         # 防止越界
         if phi > ANGLE_PHI_MAX:
             phi = ANGLE_PHI_MAX
         elif phi < ANGLE_PHI_MIN:
             phi = ANGLE_PHI_MIN
+        
+        if theta > ANGLE_THETA_MAX:
+            theta = ANGLE_THETA_MAX
+        elif theta < ANGLE_THETA_MIN:
+            theta = ANGLE_THETA_MIN
     
         return theta, phi
 
@@ -116,7 +127,7 @@ class InputData(object):
     
         # image x(height) * y(width) 2d
         # 向下取整
-        x = int((theta - (-16)) / (32.0 / 64))
+        x = int((theta - ANGLE_THETA_MIN) / ((ANGLE_THETA_MAX - ANGLE_THETA_MIN) / 64))
         y = int((phi - ANGLE_PHI_MIN) / ((ANGLE_PHI_MAX - ANGLE_PHI_MIN) / 512))
     
         # 严防越界
@@ -209,16 +220,67 @@ class InputData(object):
         return data
     
     # testing transform npy
-    def testing_image_np(self, source):
+    def testing_image_np(self, source, angle=360):
         
         assert type(source) == np.ndarray, "source is not a ndarray type!!!"
-        
         data = source
-        
-        
 
-
+        ANGLE_PHI_MAX = 360
+        ANGLE_PHI_MIN = 0
         
+        x = [data[i][0] for i in range(len(data[:, 0]))]
+        y = [data[i][1] for i in range(len(data[:, 0]))]
+        z = [data[i][2] for i in range(len(data[:, 0]))]
+
+        intensity = [data[i][3] for i in range(len(data[:, 0]))]
+        distance = [data[i][4] for i in range(len(data[:, 0]))]
+        label = [data[i][5] for i in range(len(data[:, 0]))]
+
+        thetaPt = [self.get_point_theta(data[i][0], data[i][1], data[i][2]) for i in range(len(data[:, 0]))]  # x
+        phiPt = [self.get_point_phi(data[i][0], data[i][1], data[i][2]) for i in range(len(data[:, 0]))]  # y
+
+        # 生成数据 phi * theta * [x, y, z, i, r, c]
+        image = np.zeros((64, 512, 6), dtype=np.float16)
+        
+        index_dic = {}
+        
+        def store_image(index):
+            # print (theta[index], phi[index])
+            if index == -65:
+                pass
+            
+            image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
+            image[thetaPt[index], phiPt[index], 3] = intensity[index]
+            image[thetaPt[index], phiPt[index], 4] = distance[index]
+            image[thetaPt[index], phiPt[index], 5] = label[index]
+        
+            xp = thetaPt[index]
+            yp = phiPt[index]
+            
+            if index_dic.has_key((xp, yp)):
+                index_dic[(xp, yp)].append(index)
+            else:
+                index_dic[(xp, yp)] = [index]
+            pass
+            
+        
+        for i in range(len(x)):
+    
+            tp = (thetaPt[i], phiPt[i])
+            # print(tp)
+            
+            if self.isempty(image[tp[0], tp[1], 0:3]):
+                store_image(i)
+            elif label[i] == image[tp[0], tp[1], 5]:
+                if distance[i] < image[tp[0], tp[1], 4]:
+                    image[tp[0], tp[1], 4] = distance[i]
+            elif image[tp[0], tp[1], 5] == 0 and label[i] != 0:
+                store_image(i)
+            else:
+                if distance[i] < image[tp[0], tp[1], 4]:
+                    store_image(i)
+        
+        return image, index_dic
         
         
     # 转换成npy格式 np

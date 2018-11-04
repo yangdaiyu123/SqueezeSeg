@@ -26,6 +26,9 @@ from utils.util import *
 from nets import *
 
 import pandas as pd
+import time, threading
+
+
 from tools.component import InputData
 
 FLAGS = tf.app.flags.FLAGS
@@ -38,7 +41,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     # ../scripts/log/train_finetune/model.ckpt-21000
     # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../scripts/log/train/model.ckpt-7000',
+    'checkpoint', '../scripts/log/train/model.ckpt-49999',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
@@ -66,6 +69,7 @@ def test():
     os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
     
     with tf.Graph().as_default():
+        
         mc = alibaba_squeezeSeg_config()
         mc.LOAD_PRETRAINED_MODEL = False
         mc.BATCH_SIZE = 1  # TODO(bichen): fix this hard-coded batch size.
@@ -155,47 +159,40 @@ def test():
                 
                 # transform origin npy to image(64, 512, 6)
                 trantool = InputData("")
-                image = trantool.testing_image_np(fnpy)
+                image, index_dic = trantool.testing_image_np(fnpy)
                 
                 # generate pred results with image npy data
                 pred_cls = generate_pred_cls(image, mc, model, sess)
             
-                
                 result = np.zeros((fnpy.shape[0], 1))
                 image = np.reshape(image, (-1, 6))
+            
+                def store_result(label, index_dic, point):
+                    
+                    if index_dic.has_key(point):
+                        indexes = index_dic[point]
+                        if label != 0:
+                            # print(indexes)
+                            pass
+            
+                        def store_label(i, label):
+                            result[i] = label
+                        [store_label(index, label) for index in indexes]
                 
-                # image = np.reshape(image, (-1, 6))
-                def trans_result(i):
-                    label = pred_cls[i][0]
-                    if label != 0:
-                        # count += 1
-                        if i < len(indexes):
-                            result[indexes[i]] = label
-                        
-                [trans_result(i) for i in range(pred_cls.shape[0])]
-                # print(count)
+                _ = [[store_result(pred_cls[0, i, j], index_dic, (i, j)) \
+                        for i in range(pred_cls.shape[1])] \
+                        for j in range(pred_cls.shape[2])]
                 
                 return result
             
-            
-            for f in glob.iglob(FLAGS.input_path):
-                # save the data
-                file_name = f.strip('.npy').split('/')[-1]
-                file_path = FLAGS.out_dir + file_name + '.csv'
-                
-                if os.path.exists(file_path):
-                    print(file_path)
-                    continue
-                
-                fnpy = np.load(f).astype(np.float32, copy=False)
-                result = origin_npy_result(fnpy)
-                
-                print(result)
-
+            # restore label
+            def transform_label(result):
+                # print(result)
+    
                 # restore data (58***, 1)
                 pdata = np.reshape(result, (-1, 1))
-                
-                def label_trans(index, label, squeeze_seg=False):
+    
+                def label_trans(index, label, squeeze_seg=True):
                     if squeeze_seg:
                         if label == 0:
                             pdata[index][0] = 0
@@ -206,20 +203,53 @@ def test():
                         elif label == 3:
                             pdata[index][0] = 1
     
-    
                 # 还原
                 count = np.shape(pdata)[0]
                 [label_trans(i, pdata[i][0]) for i in range(count)]
                 
-                
-                cvsdata = pd.DataFrame(pdata, columns=['category'])
+                return pdata
+            
+            # save data
+            def save_result(result):
+                # csv
+                cvsdata = pd.DataFrame(result, columns=['category'])
                 if not os.path.exists(file_path):
                     cvsdata[['category']].astype('int32').to_csv(file_path, index=None, header=None)
+                    
+                # npy
+                if False:
+                    np.save(
+                        os.path.join(FLAGS.out_dir, 'pred_' + file_name + '.npy'),
+                        pred_cls[0]
+                    )
+                
+                
+            def enqueue(f):
+                # load file
+                fnpy = np.load(f).astype(np.float32, copy=False)
+    
+                # produce result
+                result = npy_to_image_to_result(fnpy)
+    
+                # restore data (58***, 1)
+                pdata = transform_label(result)
+    
+                # save result
+                save_result(pdata)
 
-                # np.save(
-                #     os.path.join(FLAGS.out_dir, 'pred_' + file_name + '.npy'),
-                #     pred_cls[0]
-                # )
+
+            #
+            for f in glob.iglob(FLAGS.input_path):
+                # save the data
+                file_name = f.strip('.npy').split('/')[-1]
+                file_path = FLAGS.out_dir + file_name + '.csv'
+                
+                if os.path.exists(file_path):
+                    print(file_path)
+                    continue
+                
+                # threading store job
+                
                 
                 
 

@@ -123,8 +123,12 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
                 
             elif angle == -1:
                 formatdata = np.reshape(data, (-1, 6))
+                if idx == 1:
+                    print(np.shape(formatdata))
             else:
                 formatdata = np.reshape(data.values[:32768, :6], (64, 512, 6))
+                if idx == 1:
+                    print(np.shape(formatdata))
 
             # npy store
             if True:
@@ -205,7 +209,7 @@ def transform_8_to_4_npy(savepath="", angle=90, debug=False):
 if __name__ == '__main__':
 
     path = "/home/mengweiliang/disk15/df314/training"
-    transform_training_npy(path, angle=-1)
+    transform_training_npy(path, angle=0)
 
     # cluster 8 to 4 class
     # npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster360"
