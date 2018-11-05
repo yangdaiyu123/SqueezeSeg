@@ -41,7 +41,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     # ../scripts/log/train_finetune/model.ckpt-21000
     # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../scripts/log/train8/model.ckpt-6000',
+    'checkpoint', '../scripts/log/train8/model.ckpt-10000',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
@@ -89,6 +89,10 @@ def test():
                 
                 if f.shape == (64, 512, 6):
                     lidar = f[:,:, 0:5]
+                elif f.shape == (64, 512, 7):
+                    lidar = f[:, :, 0:5]
+                    index = f[:, :, 6]
+                    index = np.reshape(index, (-1, 1))
                 else:
                     lidar = f
     
@@ -106,108 +110,30 @@ def test():
                         model.lidar_mask: [lidar_mask]
                     }
                 )
+                pred_cls = np.reshape(pred_cls, (-1, 1))
                 
-                return pred_cls
-            
-            
-            # take testing npy to a origin npy
-            def origin_npy_result(fnpy):
-                
-                if np.shape(fnpy)[0] >= 32768:
-        
-                    f1 = np.load(f).astype(np.float32, copy=False)[:32768, :5]
-                    f1 = np.reshape(f1, (64, 512, 5))
-        
-                    fillnp = np.zeros((32768, 5)).astype(np.float32)
-                    f2 = np.load(f).astype(np.float32, copy=False)[32768:, :5]
-                    avildable_number = np.shape(f2)[0]
-                    padding_number = 32768 - avildable_number  # adding number
-                    fillnp[:np.shape(f2)[0], :5] = f2[:]
-        
-                    # print(np.shape(fnpy))
-                    # print(np.shape(f1), np.shape(fillnp))
-        
-                    fillnp = np.reshape(fillnp, (64, 512, 5))
-        
-                    pred_cls1 = generate_pred_cls(f1, mc, model, sess)
-                    pred_cls2 = generate_pred_cls(fillnp, mc, model, sess)
-        
-                    result1 = np.reshape(pred_cls1, (32768, 1))
-                    result2 = np.reshape(pred_cls2, (32768, 1))
-        
-                    result = np.zeros((np.shape(fnpy)[0], 1)).astype(np.float32, copy=True)
-                    result[:32768, :] = result1
-                    result[32768:(32768 + avildable_number), :] = result2[:avildable_number, :]
-    
-                else:
-        
-                    f1 = np.zeros((32768, 5))
-                    avildable_number = np.shape(fnpy)[0]
-                    f1[:np.shape(fnpy)[0], :5] = fnpy[:, :5]
-        
-                    f1 = np.reshape(f1, (64, 512, 5))
-                    pred_cls = generate_pred_cls(f1, mc, model, sess)
-        
-                    result = np.reshape(pred_cls, (32768, 1))
-                    result = result[:avildable_number, :]
-                
-                return result
-            
+                return pred_cls, index
             
             # generate result with pre_cls and
             def npy_to_image_to_result(fnpy, sess):
                 
                 # transform origin npy to image(64, 512, 6)
                 trantool = InputData("")
-                image, index_dic = trantool.testing_image_np(fnpy)
+                image = trantool.testing_image_np(fnpy)
                 
                 # generate pred results with image npy data
-                pred_cls = generate_pred_cls(image, mc, model, sess)
+                pred_cls, indexes = generate_pred_cls(image, mc, model, sess)
             
                 result = np.zeros((fnpy.shape[0], 1))
-                image = np.reshape(image, (-1, 6))
+                # image = np.reshape(image, (-1, 6))
             
-                def store_result(label, index_dic, point):
-                    
-                    if index_dic.has_key(point):
-                        indexes = index_dic[point]
-                        if label != 0:
-                            # print(indexes)
-                            pass
-            
-                        def store_label(i, label):
-                            result[i] = label
-                        [store_label(index, label) for index in indexes]
+                def store_result(i):
+                    result[int(indexes[i, 0]), 0] = pred_cls[i, 0]
                 
-                _ = [[store_result(pred_cls[0, i, j], index_dic, (i, j)) \
-                        for i in range(pred_cls.shape[1])] \
-                        for j in range(pred_cls.shape[2])]
+                _ = [store_result(i) for i in range(indexes.shape[0])]
                 
                 return result
             
-            # restore label
-            def transform_label(result):
-                # print(result)
-    
-                # restore data (58***, 1)
-                pdata = np.reshape(result, (-1, 1))
-    
-                def label_trans(index, label, squeeze_seg=True):
-                    if squeeze_seg:
-                        if label == 0:
-                            pdata[index][0] = 0
-                        elif label == 1:
-                            pdata[index][0] = 3
-                        elif label == 2:
-                            pdata[index][0] = 7
-                        elif label == 3:
-                            pdata[index][0] = 1
-    
-                # 还原
-                count = np.shape(pdata)[0]
-                [label_trans(i, pdata[i][0]) for i in range(count)]
-                
-                return pdata
             
             # save data
             def save_result(result, f):
@@ -261,6 +187,7 @@ def test():
 
                 enqueue(f, sess)
 
+
             # coord = tf.train.Coordinator()
             # threads = []
             # NUM_OF_THREAD = 5
@@ -282,3 +209,49 @@ def main(argv=None):
 
 if __name__ == '__main__':
     tf.app.run()
+
+
+'''
+            # take testing npy to a origin npy
+            def origin_npy_result(fnpy):
+                
+                if np.shape(fnpy)[0] >= 32768:
+        
+                    f1 = np.load(f).astype(np.float32, copy=False)[:32768, :5]
+                    f1 = np.reshape(f1, (64, 512, 5))
+        
+                    fillnp = np.zeros((32768, 5)).astype(np.float32)
+                    f2 = np.load(f).astype(np.float32, copy=False)[32768:, :5]
+                    avildable_number = np.shape(f2)[0]
+                    padding_number = 32768 - avildable_number  # adding number
+                    fillnp[:np.shape(f2)[0], :5] = f2[:]
+        
+                    # print(np.shape(fnpy))
+                    # print(np.shape(f1), np.shape(fillnp))
+        
+                    fillnp = np.reshape(fillnp, (64, 512, 5))
+        
+                    pred_cls1 = generate_pred_cls(f1, mc, model, sess)
+                    pred_cls2 = generate_pred_cls(fillnp, mc, model, sess)
+        
+                    result1 = np.reshape(pred_cls1, (32768, 1))
+                    result2 = np.reshape(pred_cls2, (32768, 1))
+        
+                    result = np.zeros((np.shape(fnpy)[0], 1)).astype(np.float32, copy=True)
+                    result[:32768, :] = result1
+                    result[32768:(32768 + avildable_number), :] = result2[:avildable_number, :]
+    
+                else:
+        
+                    f1 = np.zeros((32768, 5))
+                    avildable_number = np.shape(fnpy)[0]
+                    f1[:np.shape(fnpy)[0], :5] = fnpy[:, :5]
+        
+                    f1 = np.reshape(f1, (64, 512, 5))
+                    pred_cls = generate_pred_cls(f1, mc, model, sess)
+        
+                    result = np.reshape(pred_cls, (32768, 1))
+                    result = result[:avildable_number, :]
+                
+                return result
+'''

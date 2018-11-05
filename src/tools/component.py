@@ -241,6 +241,7 @@ class InputData(object):
 
         # 生成数据 phi * theta * [x, y, z, i, r, c]
         image = np.zeros((64, 512, 6), dtype=np.float16)
+        image_index = np.zeros((64, 512, 7), dtype=np.float16)
         
         index_dic = {}
         
@@ -253,19 +254,17 @@ class InputData(object):
             image[thetaPt[index], phiPt[index], 3] = intensity[index]
             image[thetaPt[index], phiPt[index], 4] = distance[index]
             image[thetaPt[index], phiPt[index], 5] = label[index]
-        
+
+            image_index[:, :, 0:6] = image
+            
             xp = thetaPt[index]
             yp = phiPt[index]
-            
-            if index_dic.has_key((xp, yp)):
-                index_dic[(xp, yp)].append(index)
-            else:
-                index_dic[(xp, yp)] = [index]
-            pass
+
+            image_index[int(xp), int(yp), 6] = index
             
         
         for i in range(len(x)):
-    
+            
             tp = (thetaPt[i], phiPt[i])
             # print(tp)
             
@@ -279,8 +278,8 @@ class InputData(object):
             else:
                 if distance[i] < image[tp[0], tp[1], 4]:
                     store_image(i)
-        
-        return image, index_dic
+            
+        return image_index
         
         
     # 转换成npy格式 np

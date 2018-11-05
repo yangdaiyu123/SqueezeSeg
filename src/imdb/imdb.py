@@ -11,6 +11,8 @@ import numpy as np
 
 from utils.util import *
 
+from tools.component import InputData
+
 class imdb(object):
     """Image database."""
     
@@ -89,7 +91,11 @@ class imdb(object):
             # read ali batch data
             record = np.load(self._lidar_2d_new_path_at(idx, angle=360))\
                 .astype(np.float32, copy=False)
-
+            
+            # transform data
+            
+            
+            
             # [::-1] ----> [-1:-len()-1:-1] reverse
             if mc.DATA_AUGMENTATION:
                 if mc.RANDOM_FLIPPING: # very bad
