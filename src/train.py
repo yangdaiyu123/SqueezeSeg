@@ -39,7 +39,7 @@ tf.app.flags.DEFINE_string('net', 'squeezeSeg',
 
 tf.app.flags.DEFINE_string('pretrained_model_path', '../data/SqueezeNet/squeezenet_v1.1.pkl',
                            """Path to the pretrained model.""")
-tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train',
+tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train8',
                            """Directory where to write event logs """
                            """and checkpoint.""")
 
@@ -90,16 +90,16 @@ def train():
         initial_step = 0
         ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
 
-        if ckpt and ckpt.model_checkpoint_path:
-            saver.restore(sess, ckpt.model_checkpoint_path)
-            steps = ckpt.model_checkpoint_path.rsplit('-', 1)
-            print(steps)
-            initial_step = int(steps[-1])
-            print("current setp is %d" % initial_step)
-        else:
-            # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
-            saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
-            pass
+        # if ckpt and ckpt.model_checkpoint_path:
+        #     saver.restore(sess, ckpt.model_checkpoint_path)
+        #     steps = ckpt.model_checkpoint_path.rsplit('-', 1)
+        #     print(steps)
+        #     initial_step = int(steps[-1])
+        #     print("current setp is %d" % initial_step)
+        # else:
+        #     # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
+        #     saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
+        #     pass
 
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
 

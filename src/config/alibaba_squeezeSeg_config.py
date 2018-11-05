@@ -7,41 +7,41 @@ def alibaba_squeezeSeg_config():
     
     asc = base_model_config('KITTI')
     
-    # asc.CLASSES = [
-    #     'DontCare',
-    #     'cyclist',
-    #     'tricycle',
-    #     'sm_allMot',
-    #     'bigMot',
-    #     'pedestrian',
-    #     'crowds',
-    #     'unknown',
-    # ]
-    asc.CLASSES = ['unknown', 'car', 'pedestrian', 'cyclist']
+    asc.CLASSES = [
+        'DontCare',
+        'cyclist',
+        'tricycle',
+        'sm_allMot',
+        'bigMot',
+        'pedestrian',
+        'crowds',
+        'unknown',
+    ]
+    # asc.CLASSES = ['unknown', 'car', 'pedestrian', 'cyclist']
   
     asc.NUM_CLASS = len(asc.CLASSES)
     asc.CLS_2_ID = dict(zip(asc.CLASSES, range(len(asc.CLASSES))))
     
-    # asc.CLS_LOSS_WEIGHT = np.array([1/936.0, 1.0,  1/2.09, 19.8,
-    #                                 6.6, 0.31, 0.03, 1.45])
+    asc.CLS_LOSS_WEIGHT = np.array([1/142.0, 1.0/0.15,  1/0.07, 1.0/3,
+                                    1, 8, 1/4.6, 50])
     #
     # # asc.CLS_LOSS_WEIGHT = np.array([1000.0, 1.0, 0.5, 0.02,
     # #                                 0.006, 0.0014, 1.0/6, 0.5])
     #
-    # asc.CLS_COLOR_MAP = np.array([[1.0, 1.0, 1.0],
-    #                               [1.0, 0.0, 0.0],
-    #                               [0.0, 1.0, 0.0],
-    #                               [0.0, 0.0, 1.0],
-    #                               [1.0, 1.0, 0.0],
-    #                               [1.0, 0.0, 1.0],
-    #                               [0.0, 1.0, 1.0],
-    #                               [1.0, 0.5, 0.0]])
+    asc.CLS_COLOR_MAP = np.array([[1.0, 1.0, 1.0],
+                                  [1.0, 0.0, 0.0],
+                                  [0.0, 1.0, 0.0],
+                                  [0.0, 0.0, 1.0],
+                                  [1.0, 1.0, 0.0],
+                                  [1.0, 0.0, 1.0],
+                                  [0.0, 1.0, 1.0],
+                                  [1.0, 0.5, 0.0]])
 
-    asc.CLS_LOSS_WEIGHT = np.array([1 / 15.0, 1.0, 10.0, 10.0])
-    asc.CLS_COLOR_MAP = np.array([[0.00, 0.00, 0.00],
-                                 [0.12, 0.56, 0.37],
-                                 [0.66, 0.55, 0.71],
-                                 [0.58, 0.72, 0.88]])
+    # asc.CLS_LOSS_WEIGHT = np.array([1 / 15.0, 1.0, 10.0, 10.0])
+    # asc.CLS_COLOR_MAP = np.array([[0.00, 0.00, 0.00],
+    #                              [0.12, 0.56, 0.37],
+    #                              [0.66, 0.55, 0.71],
+    #                              [0.58, 0.72, 0.88]])
 
     asc.BATCH_SIZE = 32
     asc.AZIMUTH_LEVEL = 512
@@ -51,27 +51,23 @@ def alibaba_squeezeSeg_config():
     asc.LCN_WIDTH = 5
     asc.RCRF_ITER = 3
 
-    asc.BILATERAL_THETA_A = np.array([.9, .9, .6, .6])
-    asc.BILATERAL_THETA_R = np.array([.015, .015, .01, .01])
-    asc.BI_FILTER_COEF = 0.1
-    asc.ANG_THETA_A = np.array([.9, .9, .6, .6])
-    
-    # # bi_angular_filters
-    # asc.BILATERAL_THETA_A = np.array([.9, .6, .9, .6,
-    #                                   .9, .6, .9, .6])
-    #
-    # # angular_filters
-    # asc.BILATERAL_THETA_R = np.array([.015, .01, .015, .01,
-    #                                   .015, .01, .015, .01])
-    #
-    # ## angular_filter_kernel
-    #
-    #
+    # asc.BILATERAL_THETA_A = np.array([.9, .9, .6, .6])
+    # asc.BILATERAL_THETA_R = np.array([.015, .015, .01, .01])
     # asc.BI_FILTER_COEF = 0.1
-    #
-    # asc.ANG_THETA_A = np.array([.9, .6, .9, .6,
-    #                             .9, .6, .9, .6])
+    # asc.ANG_THETA_A = np.array([.9, .9, .6, .6])
     
+    # bi_angular_filters
+    # angular_filter_kernel
+    asc.BILATERAL_THETA_A = np.array([.9, .9, .9, .9,
+                                      .6, .6, .6, .6])
+    asc.ANG_THETA_A = np.array([.9, .9, .9, .9,
+                                .6, .6, .6, .6])
+
+    # angular_filters
+    asc.BILATERAL_THETA_R = np.array([.015, .015, .015, .015,
+                                      .01, .01, .01, .01])
+
+    asc.BI_FILTER_COEF = 0.1
     asc.ANG_FILTER_COEF = 0.02
 
     asc.CLS_LOSS_COEF = 15.0

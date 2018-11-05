@@ -19,7 +19,7 @@ class kitti(imdb):
         # self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
         # self._gta_2d_path = os.path.join(self._data_root_path, 'gta')
         
-        self._work_dir = 'npy_cluster360'
+        self._work_dir = 'npy360'
         
         # lidar_2d path with npy
         self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
@@ -47,8 +47,10 @@ class kitti(imdb):
         
         # npy_cluster deprecated
         if self._work_dir == 'npy_origin' or \
-                self._work_dir == 'npy_whole' or \
-                self._work_dir == 'npy':
+            self._work_dir == 'npy_whole' or \
+            self._work_dir == 'npy' or \
+            self._work_dir == 'npy180' or \
+            self._work_dir == 'npy360':
             
             path =  self._ali_path + '/channelVELO_TOP_0000_%05d.npy' % (int(idx))
         
