@@ -41,7 +41,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     # ../scripts/log/train_finetune/model.ckpt-21000
     # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../scripts/log/train/model.ckpt-9000',
+    'checkpoint', '../scripts/log/train8/model.ckpt-6000',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
@@ -52,7 +52,7 @@ tf.app.flags.DEFINE_string(
 # ../scripts/log/answers/
 # answers_finetune
 tf.app.flags.DEFINE_string(
-    'out_dir', '../scripts/log/answers_thread/',
+    'out_dir', '../scripts/log/answers_8/',
     """Directory to dump output.""")
 tf.app.flags.DEFINE_string('gpu', '6', """gpu id.""")
 
@@ -236,10 +236,10 @@ def test():
                 result = npy_to_image_to_result(fnpy, sess)
     
                 # restore data (58***, 1)
-                pdata = transform_label(result)
+                # result = transform_label(result)
     
                 # save result
-                save_result(pdata, f)
+                save_result(result, f)
             
             def queue_action(file_list, sess, coord):
                 with coord.stop_on_exception():
