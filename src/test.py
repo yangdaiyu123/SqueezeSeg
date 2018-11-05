@@ -41,7 +41,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
     # ../scripts/log/train_finetune/model.ckpt-21000
     # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../scripts/log/train/model.ckpt-49999',
+    'checkpoint', '../scripts/log/train/model.ckpt-9000',
     """Path to the model parameter file.""")
 
 tf.app.flags.DEFINE_string(
@@ -52,9 +52,9 @@ tf.app.flags.DEFINE_string(
 # ../scripts/log/answers/
 # answers_finetune
 tf.app.flags.DEFINE_string(
-    'out_dir', '../scripts/log/answers/',
+    'out_dir', '../scripts/log/answers_thread/',
     """Directory to dump output.""")
-tf.app.flags.DEFINE_string('gpu', '4', """gpu id.""")
+tf.app.flags.DEFINE_string('gpu', '6', """gpu id.""")
 
 
 # my code
@@ -155,7 +155,7 @@ def test():
             
             
             # generate result with pre_cls and
-            def npy_to_image_to_result(fnpy):
+            def npy_to_image_to_result(fnpy, sess):
                 
                 # transform origin npy to image(64, 512, 6)
                 trantool = InputData("")
@@ -210,7 +210,11 @@ def test():
                 return pdata
             
             # save data
-            def save_result(result):
+            def save_result(result, f):
+    
+                file_name = f.strip('.npy').split('/')[-1]
+                file_path = FLAGS.out_dir + file_name + '.csv'
+                
                 # csv
                 cvsdata = pd.DataFrame(result, columns=['category'])
                 if not os.path.exists(file_path):
@@ -224,36 +228,52 @@ def test():
                     )
                 
                 
-            def enqueue(f):
+            def enqueue(f, sess):
                 # load file
                 fnpy = np.load(f).astype(np.float32, copy=False)
     
                 # produce result
-                result = npy_to_image_to_result(fnpy)
+                result = npy_to_image_to_result(fnpy, sess)
     
                 # restore data (58***, 1)
                 pdata = transform_label(result)
     
                 # save result
-                save_result(pdata)
-
+                save_result(pdata, f)
+            
+            def queue_action(file_list, sess, coord):
+                with coord.stop_on_exception():
+                    while not coord.should_stop():
+                        print("---------&&&&&&\n")
+                        for f in file_list:
+                            enqueue(f, sess)
 
             #
-            for f in glob.iglob(FLAGS.input_path):
+            fs = glob.glob(FLAGS.input_path)
+            for f in fs:
                 # save the data
                 file_name = f.strip('.npy').split('/')[-1]
                 file_path = FLAGS.out_dir + file_name + '.csv'
-                
+
                 if os.path.exists(file_path):
                     print(file_path)
                     continue
-                
-                # threading store job
-                
-                
-                
+
+                enqueue(f, sess)
+
+            # coord = tf.train.Coordinator()
+            # threads = []
+            # NUM_OF_THREAD = 5
+            # for t in range(NUM_OF_THREAD):
+            #     eqth = threading.Thread(target=queue_action, \
+            #                             args=[fs[t::NUM_OF_THREAD], sess, coord])
+            #     eqth.start()
+            #     threads.append(eqth)
+            
+            
 
 def main(argv=None):
+    
     if not tf.gfile.Exists(FLAGS.out_dir):
         tf.gfile.MakeDirs(FLAGS.out_dir)
     
