@@ -1,8 +1,7 @@
+#!-*- coding=utf-8 -*-
 # Author: Bichen Wu (bichen@berkeley.edu) 08/25/2016
-# --encoding=utf8--
 
 """Train"""
-
 
 from __future__ import absolute_import
 from __future__ import division
@@ -24,37 +23,41 @@ from imdb import kitti
 from utils.util import *
 from nets import *
 
-from tools import transform
-
 FLAGS = tf.app.flags.FLAGS
 
+tf.app.flags.DEFINE_string('data_path', '../data/', """Root directory of data""")
 tf.app.flags.DEFINE_string('dataset', 'KITTI',
                            """Currently only support KITTI dataset.""")
-tf.app.flags.DEFINE_string('data_path', '', """Root directory of data""")
 tf.app.flags.DEFINE_string('image_set', 'train',
                            """ Can be train, trainval, val, or test""")
-tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train',
-                           """Directory where to write event logs"""
-                           """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 250000,
+
+
+tf.app.flags.DEFINE_integer('max_steps', 100000,
                             """Maximum number of batches to run.""")
 tf.app.flags.DEFINE_string('net', 'squeezeSeg',
                            """Neural net architecture. """)
-tf.app.flags.DEFINE_string('pretrained_model_path', '',
+
+tf.app.flags.DEFINE_string('pretrained_model_path', '../data/SqueezeNet/squeezenet_v1.1.pkl',
                            """Path to the pretrained model.""")
-tf.app.flags.DEFINE_integer('summary_step', 50,
+tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train',
+                           """Directory where to write event logs """
+                           """and checkpoint.""")
+
+
+tf.app.flags.DEFINE_integer('summary_step', 100,
                             """Number of steps to save summary.""")
-tf.app.flags.DEFINE_integer('checkpoint_step', 1000,
+tf.app.flags.DEFINE_integer('checkpoint_step', 5000,
                             """Number of steps to save summary.""")
-tf.app.flags.DEFINE_string('gpu', '0', """gpu id.""")
+tf.app.flags.DEFINE_string('gpu', '1', """gpu id.""")
 
 def train():
-    
     """Train SqueezeSeg model"""
     assert FLAGS.dataset == 'KITTI', \
         'Currently only support KITTI dataset'
     
     os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
+    
+    tf.reset_default_graph()
     
     with tf.Graph().as_default():
         
@@ -62,55 +65,53 @@ def train():
             'Selected neural net architecture not supported: {}'.format(FLAGS.net)
         
         if FLAGS.net == 'squeezeSeg':
-            # mc = kitti_squeezeSeg_config()
             mc = alibaba_squeezeSeg_config()
-            
-            # ../data/SequeezeNet/squeezenet_v1.1.pkl
             mc.PRETRAINED_MODEL_PATH = FLAGS.pretrained_model_path
             
-            # I will add finetune layer
-            
             model = SqueezeSeg(mc)
+            
         
-        # 从这里配置输入
-        # data_path: ../data
         imdb = kitti(FLAGS.image_set, FLAGS.data_path, mc)
+        print("\n data path: " + imdb._ali_path)
+        print("train_dir :" + FLAGS.train_dir +'\n')
         
-        # save model size, flops, activations by layers
-        with open(os.path.join(FLAGS.train_dir, 'model_metrics.txt'), 'w') as f:
-            f.write('Number of parameter by layer:\n')
-            count = 0
-            for c in model.model_size_counter:
-                f.write('\t{}: {}\n'.format(c[0], c[1]))
-                count += c[1]
-            f.write('\ttotal: {}\n'.format(count))
-            
-            count = 0
-            f.write('\nActivation size by layer:\n')
-            for c in model.activation_counter:
-                f.write('\t{}: {}\n'.format(c[0], c[1]))
-                count += c[1]
-            f.write('\ttotal: {}\n'.format(count))
-            
-            count = 0
-            f.write('\nNumber of flops by layer:\n')
-            for c in model.flop_counter:
-                f.write('\t{}: {}\n'.format(c[0], c[1]))
-                count += c[1]
-            f.write('\ttotal: {}\n'.format(count))
-        f.close()
-        print ('Model statistics saved to {}.'.format(
-            os.path.join(FLAGS.train_dir, 'model_metrics.txt')))
+
+        # saver = tf.train.Saver(tf.all_variables())
+        saver = tf.train.Saver(model.model_params)
+        summary_op = tf.summary.merge_all()
         
+        # vars = tf.initialize_all_variables()
+        vars = tf.global_variables_initializer()
         
+        sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+        sess.run(vars)
         
+
+        initial_step = 0
+        ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
+
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            steps = ckpt.model_checkpoint_path.rsplit('-', 1)
+            print(steps)
+            initial_step = int(steps[-1])
+            print("current setp is %d" % initial_step)
+        else:
+            # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
+            saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
+            pass
+
+        summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
+
         def enqueue(sess, coord):
             with coord.stop_on_exception():
                 while not coord.should_stop():
                     # read batch input
-                    lidar_per_batch, lidar_mask_per_batch, label_per_batch, \
+                    lidar_per_batch, \
+                    lidar_mask_per_batch, \
+                    label_per_batch, \
                     weight_per_batch = imdb.read_batch_new()
-                    
+            
                     feed_dict = {
                         model.ph_keep_prob: mc.KEEP_PROB,
                         model.ph_lidar_input: lidar_per_batch,
@@ -118,21 +119,10 @@ def train():
                         model.ph_label: label_per_batch,
                         model.ph_loss_weight: weight_per_batch,
                     }
-                    
+            
                     sess.run(model.enqueue_op, feed_dict=feed_dict)
                     
-                    
-        
-        summary_op = tf.summary.merge_all()
-        # init = tf.initialize_all_variables()
-        init = tf.global_variables_initializer()
-        
-        sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-        sess.run(init)
-        
-        summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
-        
-        coord = tf.train.Coordinator()
+        coord = tf.train.Coordinator() # 创建一个协调器，管理线程
         enq_threads = []
         for _ in range(mc.NUM_ENQUEUE_THREAD):
             eqth = threading.Thread(target=enqueue, args=[sess, coord])
@@ -140,36 +130,26 @@ def train():
             enq_threads.append(eqth)
         
         run_options = tf.RunOptions(timeout_in_ms=60000)
-
-
-        # 恢复模型参数
-        initial_step = 0
-        ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
         
-        saver = tf.train.Saver(tf.global_variables())
-
-        if ckpt and ckpt.model_checkpoint_path:
-            # 从检查点恢复模型参数
-            saver.restore(sess, ckpt.model_checkpoint_path)
-            initial_step = int(ckpt.model_checkpoint_path.rsplit('-', 1)[1])
-
-        print(FLAGS.train_dir)
-        print("Current initial step is %d" % initial_step)
         
-        # 训练过程 迭代
         try:
-            for step in xrange(initial_step, initial_step+FLAGS.max_steps):
+            for step in xrange(FLAGS.max_steps):
                 start_time = time.time()
                 
                 if step % FLAGS.summary_step == 0 or step == FLAGS.max_steps-1:
                     op_list = [
-                        model.lidar_input, model.lidar_mask, model.label, model.train_op,
-                        model.loss, model.pred_cls, summary_op
+                        model.lidar_input,
+                        model.lidar_mask,
+                        model.label,
+                        model.train_op,
+                        model.loss,
+                        model.pred_cls,
+                        summary_op
                     ]
                     
                     lidar_per_batch, lidar_mask_per_batch, label_per_batch, \
-                    _, loss_value, pred_cls, summary_str = sess.run(op_list,
-                                                                    options=run_options)
+                    _, loss_value, pred_cls, summary_str \
+                    = sess.run(op_list, options=run_options)
                     
                     label_image = visualize_seg(label_per_batch[:6, :, :], mc)
                     pred_image = visualize_seg(pred_cls[:6, :, :], mc)
@@ -199,7 +179,6 @@ def train():
                     
                     # Add summaries
                     summary_writer.add_summary(summary_str, step)
-                    
                     
                     for sum_str in iou_summary_list:
                         summary_writer.add_summary(sum_str, step)
@@ -235,8 +214,8 @@ def train():
                 if step % FLAGS.checkpoint_step == 0 or step == FLAGS.max_steps-1:
                     checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
                     saver.save(sess, checkpoint_path, global_step=step)
-                    
-                    
+        
+        
         except Exception, e:
             coord.request_stop(e)
         finally:
@@ -246,16 +225,11 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
-    
-    if not tf.gfile.Exists(FLAGS.train_dir):
-        tf.gfile.MakeDirs(FLAGS.train_dir)
-        # tf.gfile.DeleteRecursively(FLAGS.train_dir)
-
+    # if tf.gfile.Exists(FLAGS.train_dir):
+    #     tf.gfile.DeleteRecursively(FLAGS.train_dir)
+    # tf.gfile.MakeDirs(FLAGS.train_dir)
     train()
 
 
 if __name__ == '__main__':
     tf.app.run()
-    
-    # path = "/home/mengweiliang/disk15/df314/training"
-    # transform.transform_npy(path)

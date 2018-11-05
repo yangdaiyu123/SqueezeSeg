@@ -9,14 +9,21 @@ import component as ct
 import numpy as np
 import os
 
-NUM_CLASS = 8
+NUM_CLASS = 4
 
+# lidar2d data
+# compute lidar2d data class point number
+
+
+
+
+# alibaba data
 def static_data(dir):
     
     tool = ct.InputData()
     names = tool.load_subnames(dir)
     
-    
+    total_weight = [0] * NUM_CLASS
     for file_name in names:
         file_path = os.path.join(dir, file_name)
         
@@ -33,9 +40,16 @@ def static_data(dir):
         for l in range(NUM_CLASS):
             weight[l] = single_np(ndata[:, 5], l)
         
-        print("文件：" + file_name)
-        print(weight)
-        print("")
+        for i in range(NUM_CLASS):
+            total_weight[i] += weight[i]
+
+        if False:
+            print("文件：" + file_name)
+            print(weight)
+            print("")
+    
+    print(total_weight)
+    
         
         
         
@@ -49,7 +63,7 @@ if __name__ == "__main__":
     npy_180 = "/home/mengweiliang/lzh/SqueezeSeg/data/npy180"
     npy_360 = "/home/mengweiliang/lzh/SqueezeSeg/data/npy360"
     
-    static_data(npy_180)
+    static_data(lidar_path)
     
     
     

@@ -17,12 +17,17 @@ class kitti(imdb):
         self._data_root_path = data_path
         
         # self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
-        
-        self._lidar_2d_path = os.path.join(self._data_root_path, 'npy180')
-        
         # self._gta_2d_path = os.path.join(self._data_root_path, 'gta')
         
+        self._work_dir = 'npy_cluster360'
         
+        # lidar_2d path with npy
+        self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
+        
+        # alibaba data path
+        self._ali_path = os.path.join("../data/", self._work_dir)
+        
+
         # a list of string indices of images in the directory
         # self._image_idx = self._load_new_image_set_idx()
         # a dict of image_idx -> [[cx, cy, w, h, cls_idx]]. x,y,w,h are not divided by
@@ -33,43 +38,56 @@ class kitti(imdb):
         self._cur_idx = 0
         # TODO(bichen): add a random seed as parameter
         self._shuffle_image_idx()
-    
-    def _load_image_set_idx(self):
-        image_set_file = os.path.join(
-            self._data_root_path, 'ImageSet', self._image_set+'.txt')
-        assert os.path.exists(image_set_file), \
-            'File does not exist: {}'.format(image_set_file)
-        
-        with open(image_set_file) as f:
-            image_idx = [x.strip() for x in f.readlines()]
-        return image_idx
-    
-    
-    def _lidar_2d_path_at(self, idx):
-        if idx[:4] == 'gta_':
-            lidar_2d_path = os.path.join(self._gta_2d_path, idx+'.npy')
-        else:
-            lidar_2d_path = os.path.join(self._lidar_2d_path, idx+'.npy')
-        
-        assert os.path.exists(lidar_2d_path), \
-            'File does not exist: {}'.format(lidar_2d_path)
-        return lidar_2d_path
-    
-    
+
+
     # 新路径, 面向alibaba数据的
-    def _lidar_2d_new_path_at(self, idx):
-        lidar_2d_path = self._lidar_2d_path + '/channelVELO_TOP_0000_%05d.npy' % int(idx)
+    def _lidar_2d_new_path_at(self, idx, angle=90):
         
-        assert os.path.exists(lidar_2d_path), 'File does not exist: {}'.format(lidar_2d_path)
+        path = self._ali_path + '/channelVELO_TOP_0000_%05d-%d.npy' % (int(idx), int(angle))
         
-        return lidar_2d_path
-    
+        # npy_cluster deprecated
+        if self._work_dir == 'npy_origin' or \
+                self._work_dir == 'npy_whole' or \
+                self._work_dir == 'npy':
+            
+            path =  self._ali_path + '/channelVELO_TOP_0000_%05d.npy' % (int(idx))
+        
+        assert os.path.exists(path), 'File does not exist: {}'.format(path)
+        
+        return path
+
+
+
+    ###
     def _load_new_image_set_idx(self):
         # path_pre = 'channelVELO_TOP_0000_'
         idxs = [i for i in range(self.train_count + 1, self.total_count + 1)]
 
         return idxs
-        
+    
+    # def _load_image_set_idx(self):
+    #     image_set_file = os.path.join(
+    #         self._data_root_path, 'ImageSet', self._image_set+'.txt')
+    #     assert os.path.exists(image_set_file), \
+    #         'File does not exist: {}'.format(image_set_file)
+    #
+    #     with open(image_set_file) as f:
+    #         image_idx = [x.strip() for x in f.readlines()]
+    #     return image_idx
+    #
+    #
+    # def _lidar_2d_path_at(self, idx):
+    #     if idx[:4] == 'gta_':
+    #         lidar_2d_path = os.path.join(self._gta_2d_path, idx+'.npy')
+    #     else:
+    #         lidar_2d_path = os.path.join(self._lidar_2d_path, idx+'.npy')
+    #
+    #     assert os.path.exists(lidar_2d_path), \
+    #         'File does not exist: {}'.format(lidar_2d_path)
+    #     return lidar_2d_path
+    
+    
+    
         
         
         

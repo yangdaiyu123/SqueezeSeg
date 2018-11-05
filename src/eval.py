@@ -20,6 +20,8 @@ from imdb import kitti
 from utils.util import *
 from nets import *
 
+from tqdm import tqdm
+
 FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('dataset', 'KITTI',
@@ -28,10 +30,12 @@ tf.app.flags.DEFINE_string('data_path', '',
                            """Root directory of data""")
 tf.app.flags.DEFINE_string('image_set', 'val',
                            """Can be train, trainval, val, or test""")
+
 tf.app.flags.DEFINE_string('eval_dir', '../scripts/log/eval_val',
                            """Directory where to write event logs """)
 tf.app.flags.DEFINE_string('checkpoint_path', '../scripts/log/train',
                            """Path to the training checkpoint.""")
+
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
                             """How often to check if new cpt is saved.""")
 tf.app.flags.DEFINE_boolean('run_once', False,
@@ -56,6 +60,10 @@ def eval_once(
         
         mc = model.mc
         mc.DATA_AUGMENTATION = False
+
+        print("\ndata path: " + imdb._ali_path)
+        print("checkpoint_path :" + FLAGS.checkpoint_path)
+        print("eval_dir :" + FLAGS.eval_dir +'\n')
         
         num_images = len(imdb.image_idx)
         
@@ -80,7 +88,7 @@ def eval_once(
         ofn_sum = np.zeros(mc.NUM_CLASS)
         ofp_sum = np.zeros(mc.NUM_CLASS)
         
-        for i in xrange(int(num_images/mc.BATCH_SIZE)):
+        for i in tqdm(xrange(int(num_images/mc.BATCH_SIZE))):
             offset = max((i+1)*mc.BATCH_SIZE - num_images, 0)
             
             _t['read'].tic()
@@ -114,12 +122,12 @@ def eval_once(
             
             _t['eval'].toc()
             
-            print ('detect: {:d}/{:d} im_read: {:.3f}s '
-                   'detect: {:.3f}s evaluation: {:.3f}s'.format(
-                (i+1)*mc.BATCH_SIZE-offset, num_images,
-                _t['read'].average_time/mc.BATCH_SIZE,
-                _t['detect'].average_time/mc.BATCH_SIZE,
-                _t['eval'].average_time/mc.BATCH_SIZE))
+            # print ('detect: {:d}/{:d} im_read: {:.3f}s '
+            #        'detect: {:.3f}s evaluation: {:.3f}s'.format(
+            #     (i+1)*mc.BATCH_SIZE-offset, num_images,
+            #     _t['read'].average_time/mc.BATCH_SIZE,
+            #     _t['detect'].average_time/mc.BATCH_SIZE,
+            #     _t['eval'].average_time/mc.BATCH_SIZE))
         
         ious = tp_sum.astype(np.float)/(tp_sum + fn_sum + fp_sum + mc.DENOM_EPSILON)
         pr = tp_sum.astype(np.float)/(tp_sum + fp_sum + mc.DENOM_EPSILON)
@@ -193,6 +201,7 @@ def evaluate():
             eval_summary_ops.append(tf.summary.scalar(sm, ph))
         
         saver = tf.train.Saver(model.model_params)
+        # saver = tf.train.Saver(tf.global_variables())
         
         summary_writer = tf.summary.FileWriter(FLAGS.eval_dir, g)
         

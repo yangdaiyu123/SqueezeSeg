@@ -10,7 +10,8 @@ from datetime import datetime
 import os.path
 import sys
 import time
-import glob    
+import glob
+from scipy.io import savemat
 
 import numpy as np
 from six.moves import xrange
@@ -41,7 +42,7 @@ def _normalize(x):
 def detect():
   """Detect LiDAR data."""
 
-  os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
+  os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 
   with tf.Graph().as_default():
     mc = kitti_squeezeSeg_config()
@@ -51,6 +52,7 @@ def detect():
 
     saver = tf.train.Saver(model.model_params)
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
+      sess.run(tf.global_variables_initializer())
       saver.restore(sess, FLAGS.checkpoint)
       
       for f in glob.iglob(FLAGS.input_path):
@@ -70,12 +72,13 @@ def detect():
             }
         )
 
-        # save the data
+        # save the npy and mat data
         file_name = f.strip('.npy').split('/')[-1]
         np.save(
             os.path.join(FLAGS.out_dir, 'pred_'+file_name+'.npy'),
             pred_cls[0]
         )
+        savemat(os.path.join(FLAGS.out_dir, 'pred_'+file_name+'.mat'), {'pred_cls': pred_cls[0]})
 
         # save the plot
         depth_map = Image.fromarray(

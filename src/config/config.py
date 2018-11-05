@@ -102,7 +102,7 @@ def base_model_config(dataset='KITTI'):
     cfg.LOAD_PRETRAINED_MODEL = True
     
     # path to load the pre-trained model
-    cfg.PRETRAINED_MODEL_PATH = ''
+    cfg.PRETRAINED_MODEL_PATH = '../data/SqueezeNet/squeezenet_v1.1.pkl'
     
     # print log to console in debug mode
     cfg.DEBUG_MODE = False
