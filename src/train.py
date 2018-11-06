@@ -40,7 +40,7 @@ tf.app.flags.DEFINE_integer('checkpoint_step', 5000,
 tf.app.flags.DEFINE_integer('summary_step', 100,
                             """Number of steps to save summary.""")
 
-tf.app.flags.DEFINE_string('gpu', '1', """gpu id.""")
+tf.app.flags.DEFINE_string('gpu', '4', """gpu id.""")
 
 
 def train():

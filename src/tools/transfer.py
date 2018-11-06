@@ -17,6 +17,13 @@ ANGLE_THETA_MIN = -16.0
 theta_max = 0.0
 theta_min = 0.0
 
+
+def isempty(x):
+    if (x == [0, 0, 0]).all():
+        return True
+    else:
+        return False
+
 def get_degree(x, y, z):
     
     sqrt_xy = np.sqrt(x ** 2 + y ** 2)
@@ -57,7 +64,9 @@ def get_point(theta, phi):
     
     # 严防越界
     x = (x > 63) and 63 or x
+    x = (x < 0) and 0 or x
     y = (y > 511) and 511 or y
+    y = (y < 0) and 0 or y
 
     return x, y
 
@@ -79,60 +88,67 @@ def trainging_data(fnpy):
 
 def testing_data(fnpy):
     
-    pass
+    return _tranfrom_data(fnpy)[:, :, :]
 
 def _tranfrom_data(fnpy):
     
     assert type(fnpy) == np.ndarray, "source is not a ndarray type!!!"
     data = fnpy
     
-    x = [data[i][0] for i in range(len(data[:, 0]))]
-    y = [data[i][1] for i in range(len(data[:, 0]))]
-    z = [data[i][2] for i in range(len(data[:, 0]))]
+    data_length = data.shape[0]
     
-    intensity = [data[i][3] for i in range(len(data[:, 0]))]
-    distance = [data[i][4] for i in range(len(data[:, 0]))]
-    label = [data[i][5] for i in range(len(data[:, 0]))]
+    x = [data[i][0] for i in range(data_length)]
+    y = [data[i][1] for i in range(data_length)]
+    z = [data[i][2] for i in range(data_length)]
     
-    thetaPt = [get_point_theta(data[i][0], data[i][1], data[i][2]) for i in range(len(data[:, 0]))]  # x
-    phiPt = [get_point_phi(data[i][0], data[i][1], data[i][2]) for i in range(len(data[:, 0]))]  # y
+    intensity = [data[i][3] for i in range(data_length)]
+    distance = [data[i][4] for i in range(data_length)]
+    label = [data[i][5] for i in range(data_length)]
+    
+    thetaPt = [get_point_theta(data[i][0], data[i][1], data[i][2]) for i in range(data_length)]  # x
+    phiPt = [get_point_phi(data[i][0], data[i][1], data[i][2]) for i in range(data_length)]  # y
     
     # 生成数据 phi * theta * [x, y, z, i, r, c]
-    image = np.zeros((64, 512, 6), dtype=np.float16)
-    image_index = np.zeros((64, 512, 7), dtype=np.float16)
+    # image = np.zeros((64, 512, 6), dtype=np.float16)
+    image_index = np.zeros((64, 512, 9), dtype=np.float32)
     
     def store_image(index):
         # print (theta[index], phi[index])
+        xp = int(thetaPt[index])
+        yp = int(phiPt[index])
+
+        image_index[xp, yp, 0:3] = [x[index], y[index], z[index]]
         
-        image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
-        image[thetaPt[index], phiPt[index], 3] = intensity[index]
-        image[thetaPt[index], phiPt[index], 4] = distance[index]
-        image[thetaPt[index], phiPt[index], 5] = label[index]
+        image_index[xp, yp, 3] = intensity[index]
+        image_index[xp, yp, 4] = distance[index]
+        image_index[xp, yp, 5] = label[index]
         
-        image_index[:, :, 0:6] = image
+        image_index[xp, yp, 6] = index
+        image_index[xp, yp, 7] = xp
+        image_index[xp, yp, 8] = yp
         
-        xp = thetaPt[index]
-        yp = phiPt[index]
+        if xp == 32 and yp == 5:
+            pass
+
         
-        image_index[int(xp), int(yp), 6] = index
-    
     for i in range(len(x)):
         
-        if len(x) == 57888:
+        if i == 57920:
             pass
         
         tp = (thetaPt[i], phiPt[i])
         # print(tp)
         
-        if self.isempty(image[tp[0], tp[1], 0:3]):
+        if isempty(image_index[tp[0], tp[1], 0:3]):
             store_image(i)
-        elif label[i] == image[tp[0], tp[1], 5]:
-            if distance[i] < image[tp[0], tp[1], 4]:
-                image[tp[0], tp[1], 4] = distance[i]
-        elif image[tp[0], tp[1], 5] == 0 and label[i] != 0:
+        elif label[i] == image_index[tp[0], tp[1], 5]:
+            if distance[i] < image_index[tp[0], tp[1], 4]:
+                store_image(i)
+        elif image_index[tp[0], tp[1], 5] == 0 and label[i] != 0:
             store_image(i)
         else:
-            if distance[i] < image[tp[0], tp[1], 4]:
+            if distance[i] < image_index[tp[0], tp[1], 4]:
                 store_image(i)
+    
     
     return image_index

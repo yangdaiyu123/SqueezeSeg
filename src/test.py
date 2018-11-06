@@ -35,7 +35,7 @@ from config.project_config import *
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('gpu', '6', """gpu id.""")
+tf.app.flags.DEFINE_string('gpu', '3', """gpu id.""")
 
 
 def test():
@@ -55,7 +55,8 @@ def test():
         
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
             
-            saver.restore(sess, FLAGS.checkpoint)
+            # sess.run(tf.global_variables_initializer())
+            saver.restore(sess, TESTING_MODEL_PATH)
             
             # get lidar testing data pred class
             # lidar ---> (64, 512, 5)
@@ -89,22 +90,29 @@ def test():
             def npy_to_image_to_result(fnpy, sess):
                 
                 # transform origin npy to image(64, 512, 6)
-                image = trantool.testing_data(fnpy)
-                indexes = image[:, :, 6]
+                image = testing_data(fnpy)
+                
+                indexes = np.reshape(image[:, :, 6], (-1, 1))
+                
+                xp = np.reshape(image[:, :, 7], (-1, 1))
+                yp = np.reshape(image[:, :, 8], (-1, 1))
                 
                 # generate pred results with image npy data
-                pred_cls = generate_pred_cls(imagep[:,:, 0:6], mc, model, sess)
+                pred_cls = generate_pred_cls(image[:,:, 0:6], mc, model, sess)
             
                 result = np.zeros((fnpy.shape[0], 1))
                 # image = np.reshape(image, (-1, 6))
             
                 def store_result(i):
                     
-                    shape0 = int(indexes[i, 0])
-                    print(shape0)
-                    if shape0 == 57888:
+                    idx = int(indexes[i, 0])
+                    idxp = int(xp[i, 0])
+                    idyp = int(yp[i, 0])
+                    
+                    if idx == 57920:
                         pass
-                    result[shape0, 0] = pred_cls[i, 0]
+                    
+                    result[idx, 0] = pred_cls[i, 0]
                 
                 count = indexes.shape[0]
                 _ = [store_result(i) for i in range(count)]

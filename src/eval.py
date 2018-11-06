@@ -28,9 +28,7 @@ FLAGS = tf.app.flags.FLAGS
 
 tf.app.flags.DEFINE_string('image_set', 'val',
                            """Can be train, trainval, val, or test""")
-tf.app.flags.DEFINE_string('net', 'squeezeSeg',
-                           """Neural net architecture.""")
-tf.app.flags.DEFINE_string('gpu', '0', """gpu id.""")
+tf.app.flags.DEFINE_string('gpu', '5', """gpu id.""")
 
 
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
@@ -40,15 +38,15 @@ tf.app.flags.DEFINE_boolean('run_once', False,
 
 
 
-def eval_once(
-        saver, ckpt_path, summary_writer, eval_summary_ops, eval_summary_phs, imdb,
-        model):
+def eval_once(saver, ckpt_path, summary_writer, \
+              eval_summary_ops, eval_summary_phs, imdb,model):
     
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         
         # Restores from checkpoint
         print("session restore path: " + ckpt_path)
-        saver.restore(sess, path)
+        saver.restore(sess, ckpt_path)
+        
         # Assuming model_checkpoint_path looks something like:
         #   /ckpt_dir/model.ckpt-0,
         # extract global_step from it.
@@ -224,7 +222,6 @@ def evaluate():
                     else:
                         ckpts.add(ckpt.model_checkpoint_path)
                         print ('Evaluating {}...'.format(ckpt.model_checkpoint_path))
-                        
                         
                         eval_once(
                             saver, ckpt.model_checkpoint_path, summary_writer,

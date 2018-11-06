@@ -51,7 +51,8 @@ class kitti(imdb):
             self._work_dir == 'npy_whole' or \
             self._work_dir == 'npy' or \
             self._work_dir == 'npy180' or \
-            self._work_dir == 'npy360':
+            self._work_dir == 'npy360' or \
+            self._work_dir == 'npy360_full':
             
             path =  self._ali_path + '/channelVELO_TOP_0000_%05d.npy' % (int(idx))
         

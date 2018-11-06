@@ -219,72 +219,7 @@ class InputData(object):
         return data
     
     # testing transform npy
-    def testing_image_np(self, source, angle=360):
-        
-        assert type(source) == np.ndarray, "source is not a ndarray type!!!"
-        data = source
-
-        ANGLE_PHI_MAX = 360
-        ANGLE_PHI_MIN = 0
-        
-        x = [data[i][0] for i in range(len(data[:, 0]))]
-        y = [data[i][1] for i in range(len(data[:, 0]))]
-        z = [data[i][2] for i in range(len(data[:, 0]))]
-
-        intensity = [data[i][3] for i in range(len(data[:, 0]))]
-        distance = [data[i][4] for i in range(len(data[:, 0]))]
-        label = [data[i][5] for i in range(len(data[:, 0]))]
-
-        thetaPt = [self.get_point_theta(data[i][0], data[i][1], data[i][2]) for i in range(len(data[:, 0]))]  # x
-        phiPt = [self.get_point_phi(data[i][0], data[i][1], data[i][2]) for i in range(len(data[:, 0]))]  # y
-
-        # 生成数据 phi * theta * [x, y, z, i, r, c]
-        image = np.zeros((64, 512, 6), dtype=np.float16)
-        image_index = np.zeros((64, 512, 7), dtype=np.float16)
-        
-        index_dic = {}
-        
-        def store_image(index):
-            # print (theta[index], phi[index])
-            if index == -65:
-                pass
-            
-            image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
-            image[thetaPt[index], phiPt[index], 3] = intensity[index]
-            image[thetaPt[index], phiPt[index], 4] = distance[index]
-            image[thetaPt[index], phiPt[index], 5] = label[index]
-
-            image_index[:, :, 0:6] = image
-            
-            xp = thetaPt[index]
-            yp = phiPt[index]
-
-            if index == 57888:
-                print('---------> 57888')
-                pass
-            image_index[int(xp), int(yp), 6] = index
-            
-        
-        for i in range(len(x)):
-            
-            if len(x) == 57888:
-                pass
-            
-            tp = (thetaPt[i], phiPt[i])
-            # print(tp)
-            if self.isempty(image[tp[0], tp[1], 0:3]):
-                store_image(i)
-            elif label[i] == image[tp[0], tp[1], 5]:
-                if distance[i] < image[tp[0], tp[1], 4]:
-                    image[tp[0], tp[1], 4] = distance[i]
-            elif image[tp[0], tp[1], 5] == 0 and label[i] != 0:
-                store_image(i)
-            else:
-                if distance[i] < image[tp[0], tp[1], 4]:
-                    store_image(i)
-        
-        
-        return image_index
+    # transfer.py
         
         
     # 转换成npy格式 np
@@ -409,11 +344,16 @@ class InputData(object):
 
         def store_image(index):
             # print (theta[index], phi[index])
-            image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
             
-            image[thetaPt[index], phiPt[index], 3] = intensity[index]
-            image[thetaPt[index], phiPt[index], 4] = distance[index]
-            image[thetaPt[index], phiPt[index], 5] = label[index]
+            xp = int(thetaPt[index])
+            yp = int(phiPt[index])
+            
+            image[xp, yp, 0:3] = [x[index], y[index], z[index]]
+
+            image[xp, yp, 3] = intensity[index]
+            image[xp, yp, 4] = distance[index]
+            image[xp, yp, 5] = label[index]
+            
 
         ignore_accuracy = 0.05
         for i in range(len(x)):
@@ -422,6 +362,7 @@ class InputData(object):
             if abs(y[i]) < ignore_accuracy: continue
             
             xyz = image[thetaPt[i], phiPt[i], 0:3]
+            
             l = image[thetaPt[i], phiPt[i], 5]
             d = image[thetaPt[i], phiPt[i], 4]
             

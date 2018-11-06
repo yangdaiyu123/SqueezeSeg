@@ -105,7 +105,7 @@ def base_model_config(dataset='KITTI'):
     cfg.PRETRAINED_MODEL_PATH = '../data/SqueezeNet/squeezenet_v1.1.pkl'
     
     # print log to console in debug mode
-    cfg.DEBUG_MODE = False
+    cfg.DEBUG_MODE = True
     
     # gradients with norm larger than this is going to be clipped.
     cfg.MAX_GRAD_NORM = 10.0
