@@ -64,7 +64,7 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
     elif angle == 180:
         trantool.savePath = "npy180"
     elif angle == 360:
-        trantool.savePath = "npy360"
+        trantool.savePath = "npy360_full"
         
     elif angle == -1:
         trantool.savePath = 'npy_whole'
@@ -209,7 +209,7 @@ def transform_8_to_4_npy(savepath="", angle=90, debug=False):
 if __name__ == '__main__':
 
     path = "/home/mengweiliang/disk15/df314/training"
-    transform_training_npy(path, angle=0)
+    transform_training_npy(path, angle=360)
 
     # cluster 8 to 4 class
     # npy_cluster = "/home/mengweiliang/disk15/df314/training/npy_cluster360"

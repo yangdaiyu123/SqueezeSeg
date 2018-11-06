@@ -30,37 +30,12 @@ import time, threading
 
 
 from tools.component import InputData
+from tools.transfer import *
+from config.project_config import *
 
 FLAGS = tf.app.flags.FLAGS
 
-# tf.app.flags.DEFINE_string(
-#     'checkpoint', '../scripts/log/train/model.ckpt-75000',
-#     """Path to the model parameter file.""")
-
-
-tf.app.flags.DEFINE_string(
-    # ../scripts/log/train_finetune/model.ckpt-21000
-    # ../data/SqueezeSeg/model.ckpt-23000
-    'checkpoint', '../scripts/log/train8/model.ckpt-10000',
-    """Path to the model parameter file.""")
-
-tf.app.flags.DEFINE_string(
-    'input_path', '../data/test2/npy/*',
-    """Input lidar scan to be detected. Can process glob input such as """
-    """./data/samples/*.npy or single input.""")
-
-# ../scripts/log/answers/
-# answers_finetune
-tf.app.flags.DEFINE_string(
-    'out_dir', '../scripts/log/answers_8/',
-    """Directory to dump output.""")
 tf.app.flags.DEFINE_string('gpu', '6', """gpu id.""")
-
-
-# my code
-def geneate_results():
-    
-    pass
 
 
 def test():
@@ -87,12 +62,8 @@ def test():
             # pred_cls ----> (64, 512, 1)
             def generate_pred_cls(f, mc, model, sess):
                 
-                if f.shape == (64, 512, 6):
+                if f.shape[2] > 5:
                     lidar = f[:,:, 0:5]
-                elif f.shape == (64, 512, 7):
-                    lidar = f[:, :, 0:5]
-                    index = f[:, :, 6]
-                    index = np.reshape(index, (-1, 1))
                 else:
                     lidar = f
     
@@ -112,25 +83,31 @@ def test():
                 )
                 pred_cls = np.reshape(pred_cls, (-1, 1))
                 
-                return pred_cls, index
+                return pred_cls
             
             # generate result with pre_cls and
             def npy_to_image_to_result(fnpy, sess):
                 
                 # transform origin npy to image(64, 512, 6)
-                trantool = InputData("")
-                image = trantool.testing_image_np(fnpy)
+                image = trantool.testing_data(fnpy)
+                indexes = image[:, :, 6]
                 
                 # generate pred results with image npy data
-                pred_cls, indexes = generate_pred_cls(image, mc, model, sess)
+                pred_cls = generate_pred_cls(imagep[:,:, 0:6], mc, model, sess)
             
                 result = np.zeros((fnpy.shape[0], 1))
                 # image = np.reshape(image, (-1, 6))
             
                 def store_result(i):
-                    result[int(indexes[i, 0]), 0] = pred_cls[i, 0]
+                    
+                    shape0 = int(indexes[i, 0])
+                    print(shape0)
+                    if shape0 == 57888:
+                        pass
+                    result[shape0, 0] = pred_cls[i, 0]
                 
-                _ = [store_result(i) for i in range(indexes.shape[0])]
+                count = indexes.shape[0]
+                _ = [store_result(i) for i in range(count)]
                 
                 return result
             

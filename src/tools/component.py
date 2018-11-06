@@ -19,7 +19,6 @@ class OutputData(object):
         self._modelPath = path
 
 
-
         
 ANGLE_PHI_MAX = 360.0
 ANGLE_PHI_MIN = 0.0
@@ -260,14 +259,19 @@ class InputData(object):
             xp = thetaPt[index]
             yp = phiPt[index]
 
+            if index == 57888:
+                print('---------> 57888')
+                pass
             image_index[int(xp), int(yp), 6] = index
             
         
         for i in range(len(x)):
             
+            if len(x) == 57888:
+                pass
+            
             tp = (thetaPt[i], phiPt[i])
             # print(tp)
-            
             if self.isempty(image[tp[0], tp[1], 0:3]):
                 store_image(i)
             elif label[i] == image[tp[0], tp[1], 5]:
@@ -278,7 +282,8 @@ class InputData(object):
             else:
                 if distance[i] < image[tp[0], tp[1], 4]:
                     store_image(i)
-            
+        
+        
         return image_index
         
         
@@ -315,15 +320,9 @@ class InputData(object):
         # 生成数据 phi * theta * [x, y, z, i, r, c]
         image = np.zeros((64, 512, 6), dtype=np.float16)
 
-        indexes = []
-        points = []
-        map = {}
         def store_image(index):
             # print (theta[index], phi[index])
-            indexes.append(index)
-            point = (thetaPt[i], phiPt[i])
-            points.append(point)
-            
+   
             image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
             image[thetaPt[index], phiPt[index], 3] = intensity[index]
             image[thetaPt[index], phiPt[index], 4] = distance[index]
@@ -344,27 +343,6 @@ class InputData(object):
                 if distance[i] < image[thetaPt[i], phiPt[i], 4]:
                     store_image(i)
         
-     
-        if debug:
-            # print theta, phi
-            start = time.time()
-            for i in range(len(x)):
-                # print x[i], y[i], z[i], intensity[i], distance[i], label[i]
-                value = x[i]
-    
-            print time.time() - start
-    
-            start = time.time()
-            for i in range(len(x)):
-                # print data[i]
-                value = data[i]
-    
-            print time.time() - start
-            
-            print source.values
-            print 'type: %s' % type(source.values)
-            print np.shape(source.values)
-            print np.shape(image)
         
         return image
 
@@ -386,11 +364,17 @@ class InputData(object):
         def get_image_point(x, y, z, distance):
     
             sqrt_xy = np.sqrt(x ** 2 + y ** 2)
+            
             theta = np.arctan(z / sqrt_xy) * 180 / math.pi
             phi = np.arcsin(y / sqrt_xy) * 180 / math.pi
     
             # print(x, y)
             # print("(%s) ----------> " % phi)
+            
+            if theta > ANGLE_THETA_MAX:
+                theta = ANGLE_THETA_MAX
+            if theta < ANGLE_THETA_MIN:
+                theta = ANGLE_THETA_MIN
     
             if x > 0 and y > 0:  # 0 - 90
                 phi = phi
@@ -400,12 +384,13 @@ class InputData(object):
                 phi = 180 - phi
             elif x > 0 and y < 0:  # 270 - 360
                 phi = phi + 360
+            
     
             # print("phi is : (%s)" % phi)
             # print()
     
-            theta_pt = int((theta - (-16.0)) / (32.0 / 64))
-            phi_pt = int((phi - 0) / (360.0 / 512))
+            theta_pt = int((theta - (ANGLE_THETA_MIN)) / ((ANGLE_THETA_MAX-ANGLE_THETA_MIN) / 64))
+            phi_pt = int((phi - ANGLE_PHI_MIN) / ((ANGLE_PHI_MAX-ANGLE_PHI_MIN) / 512))
     
             # 严防越界
             theta_pt = (theta_pt > 63) and 63 or theta_pt
@@ -424,27 +409,36 @@ class InputData(object):
 
         def store_image(index):
             # print (theta[index], phi[index])
-    
             image[thetaPt[index], phiPt[index], 0:3] = [x[index], y[index], z[index]]
+            
             image[thetaPt[index], phiPt[index], 3] = intensity[index]
             image[thetaPt[index], phiPt[index], 4] = distance[index]
             image[thetaPt[index], phiPt[index], 5] = label[index]
 
+        ignore_accuracy = 0.05
         for i in range(len(x)):
-            if abs(x[i]) < 0.5: continue
-            if abs(y[i]) < 0.5: continue
-    
-            if self.isempty(image[thetaPt[i], phiPt[i], 0:3]):
+            
+            if abs(x[i]) < ignore_accuracy: continue
+            if abs(y[i]) < ignore_accuracy: continue
+            
+            xyz = image[thetaPt[i], phiPt[i], 0:3]
+            l = image[thetaPt[i], phiPt[i], 5]
+            d = image[thetaPt[i], phiPt[i], 4]
+            
+            if self.isempty(xyz):
                 store_image(i)
-            elif label[i] == image[thetaPt[i], phiPt[i], 5]:
-                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
-                    image[thetaPt[i], phiPt[i], 4] = distance[i]
-            elif image[thetaPt[i], phiPt[i], 5] == 0 and label[i] != 0:
+            
+            # 点上是标签0的被替换
+            elif l == 0 and label[i] != 0:
                 store_image(i)
-            else:
-                if distance[i] < image[thetaPt[i], phiPt[i], 4]:
-                    store_image(i)
 
+            # 同一个标签近的值
+            elif label[i] == l and distance[i] < d:
+                store_image(i)
+                
+            else:
+                store_image(i)
+                
         return image
     
         

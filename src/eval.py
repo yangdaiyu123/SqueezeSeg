@@ -21,28 +21,23 @@ from utils.util import *
 from nets import *
 
 from tqdm import tqdm
+from config.project_config import *
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('dataset', 'KITTI',
-                           """Currently support KITTI dataset.""")
-tf.app.flags.DEFINE_string('data_path', '',
-                           """Root directory of data""")
+
 tf.app.flags.DEFINE_string('image_set', 'val',
                            """Can be train, trainval, val, or test""")
+tf.app.flags.DEFINE_string('net', 'squeezeSeg',
+                           """Neural net architecture.""")
+tf.app.flags.DEFINE_string('gpu', '0', """gpu id.""")
 
-tf.app.flags.DEFINE_string('eval_dir', '../scripts/log/eval_val8',
-                           """Directory where to write event logs """)
-tf.app.flags.DEFINE_string('checkpoint_path', '../scripts/log/train8',
-                           """Path to the training checkpoint.""")
 
 tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 1,
                             """How often to check if new cpt is saved.""")
 tf.app.flags.DEFINE_boolean('run_once', False,
                             """Whether to run eval only once.""")
-tf.app.flags.DEFINE_string('net', 'squeezeSeg',
-                           """Neural net architecture.""")
-tf.app.flags.DEFINE_string('gpu', '0', """gpu id.""")
+
 
 
 def eval_once(
@@ -52,7 +47,8 @@ def eval_once(
     with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         
         # Restores from checkpoint
-        saver.restore(sess, ckpt_path)
+        print("session restore path: " + ckpt_path)
+        saver.restore(sess, path)
         # Assuming model_checkpoint_path looks something like:
         #   /ckpt_dir/model.ckpt-0,
         # extract global_step from it.
@@ -219,6 +215,7 @@ def evaluate():
                 # that stores checkpoint files.
                 ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_path)
                 if ckpt and ckpt.model_checkpoint_path:
+                    
                     if ckpt.model_checkpoint_path in ckpts:
                         # Do not evaluate on the same checkpoint
                         print ('Wait {:d}s for new checkpoints to be saved ... '
@@ -227,6 +224,8 @@ def evaluate():
                     else:
                         ckpts.add(ckpt.model_checkpoint_path)
                         print ('Evaluating {}...'.format(ckpt.model_checkpoint_path))
+                        
+                        
                         eval_once(
                             saver, ckpt.model_checkpoint_path, summary_writer,
                             eval_summary_ops, eval_summary_phs, imdb, model)

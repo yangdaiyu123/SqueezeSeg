@@ -22,6 +22,7 @@ class SqueezeSeg(ModelSkeleton):
             ModelSkeleton.__init__(self, mc)
             
             self._add_forward_graph()
+            
             self._add_output_graph()
             self._add_loss_graph()
             self._add_train_graph()
@@ -38,6 +39,8 @@ class SqueezeSeg(ModelSkeleton):
                 'Cannot find pretrained model at the given path:' \
                 '  {}'.format(mc.PRETRAINED_MODEL_PATH)
             self.caffemodel_weight = joblib.load(mc.PRETRAINED_MODEL_PATH)
+        
+        
         
         conv1 = self._conv_layer(
             'conv1', self.lidar_input, filters=64, size=3, stride=2,

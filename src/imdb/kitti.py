@@ -7,7 +7,7 @@ import numpy as np
 import subprocess
 
 from imdb import imdb
-
+from config.project_config import *
 
 class kitti(imdb):
     
@@ -19,13 +19,14 @@ class kitti(imdb):
         # self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
         # self._gta_2d_path = os.path.join(self._data_root_path, 'gta')
         
-        self._work_dir = 'npy_whole'
+        self._work_dir = DATA_WORKING_PATH
         
         # lidar_2d path with npy
         self._lidar_2d_path = os.path.join(self._data_root_path, 'lidar_2d')
         
+        
         # alibaba data path
-        self._ali_path = os.path.join("../data/", self._work_dir)
+        self._ali_path = os.path.join(FLAGS.data_path, self._work_dir)
         
 
         # a list of string indices of images in the directory

@@ -8,17 +8,19 @@ import random
 import shutil
 
 import numpy as np
+import tensorflow as tf
 
 from utils.util import *
+from tools.transfer import *
+from config.project_config import *
 
-from tools.component import InputData
 
 class imdb(object):
     """Image database."""
     
     start_index = 0
-    total_count = 50000
-    train_count = 45000
+    total_count = TRAINING_TOTAL_COUNT
+    train_count = TRAINING_TOTAL_COUNT - EVALUATION_TOTAL_COUNT
     
     def __init__(self, name, mc):
         self._name = name
@@ -92,9 +94,8 @@ class imdb(object):
             record = np.load(self._lidar_2d_new_path_at(idx, angle=360))\
                 .astype(np.float32, copy=False)
             
-            # transform data
-            
-            
+            # # transform data
+            # record = trainging_data(record)
             
             # [::-1] ----> [-1:-len()-1:-1] reverse
             if mc.DATA_AUGMENTATION:
@@ -127,76 +128,7 @@ class imdb(object):
 
         return np.array(lidar_per_batch), np.array(lidar_mask_per_batch), \
                np.array(label_per_batch), np.array(weight_per_batch)
-
-
-        
-    def read_batch(self, shuffle=True):
-        """Read a batch of lidar data including labels. Data formated as numpy array
-        of shape: height x width x {x, y, z, intensity, range, label}.
-        Args:
-          shuffle: whether or not to shuffle the dataset
-        Returns:
-          lidar_per_batch: LiDAR input. Shape: batch x height x width x 5.
-          lidar_mask_per_batch: LiDAR mask, 0 for missing data and 1 otherwise.
-            Shape: batch x height x width x 1.
-          label_per_batch: point-wise labels. Shape: batch x height x width.
-          weight_per_batch: loss weights for different classes. Shape:
-            batch x height x width
-        """
-        mc = self.mc
-        
-        if shuffle:
-            if self._cur_idx + mc.BATCH_SIZE >= len(self._image_idx):
-                self._shuffle_image_idx()
-            batch_idx = self._perm_idx[self._cur_idx:self._cur_idx+mc.BATCH_SIZE]
-            self._cur_idx += mc.BATCH_SIZE
-        else:
-            if self._cur_idx + mc.BATCH_SIZE >= len(self._image_idx):
-                batch_idx = self._image_idx[self._cur_idx:] \
-                            + self._image_idx[:self._cur_idx + mc.BATCH_SIZE-len(self._image_idx)]
-                self._cur_idx += mc.BATCH_SIZE - len(self._image_idx)
-            else:
-                batch_idx = self._image_idx[self._cur_idx:self._cur_idx+mc.BATCH_SIZE]
-                self._cur_idx += mc.BATCH_SIZE
-        
-        lidar_per_batch = []
-        lidar_mask_per_batch = []
-        label_per_batch = []
-        weight_per_batch = []
-        
-        for idx in batch_idx:
-            # load data
-            # loading from npy is 30x faster than loading from pickle
-            record = np.load(self._lidar_2d_path_at(idx)).astype(np.float32, copy=False)
-            
-            if mc.DATA_AUGMENTATION:
-                if mc.RANDOM_FLIPPING:
-                    if np.random.rand() > 0.5:
-                        # flip y
-                        record = record[:, ::-1, :]
-                        record[:, :, 1] *= -1
-            
-            lidar = record[:, :, :5] # x, y, z, intensity, depth
-            lidar_mask = np.reshape(
-                (lidar[:, :, 4] > 0),
-                [mc.ZENITH_LEVEL, mc.AZIMUTH_LEVEL, 1]
-            )
-            # normalize
-            lidar = (lidar - mc.INPUT_MEAN)/mc.INPUT_STD
-            
-            label = record[:, :, 5]
-            weight = np.zeros(label.shape)
-            for l in range(mc.NUM_CLASS):
-                weight[label==l] = mc.CLS_LOSS_WEIGHT[int(l)]
-            
-            # Append all the data
-            lidar_per_batch.append(lidar)
-            lidar_mask_per_batch.append(lidar_mask)
-            label_per_batch.append(label)
-            weight_per_batch.append(weight)
-        
-        return np.array(lidar_per_batch), np.array(lidar_mask_per_batch), \
-               np.array(label_per_batch), np.array(weight_per_batch)
+    
     
     def evaluate_detections(self):
         raise NotImplementedError

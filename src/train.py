@@ -22,87 +22,73 @@ from config import *
 from imdb import kitti
 from utils.util import *
 from nets import *
+from config import *
+
+from config.project_config import *
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('data_path', '../data/', """Root directory of data""")
-tf.app.flags.DEFINE_string('dataset', 'KITTI',
-                           """Currently only support KITTI dataset.""")
 tf.app.flags.DEFINE_string('image_set', 'train',
                            """ Can be train, trainval, val, or test""")
 
-
 tf.app.flags.DEFINE_integer('max_steps', 100000,
                             """Maximum number of batches to run.""")
-tf.app.flags.DEFINE_string('net', 'squeezeSeg',
-                           """Neural net architecture. """)
 
-tf.app.flags.DEFINE_string('pretrained_model_path', '../data/SqueezeNet/squeezenet_v1.1.pkl',
-                           """Path to the pretrained model.""")
-tf.app.flags.DEFINE_string('train_dir', '../scripts/log/train8',
-                           """Directory where to write event logs """
-                           """and checkpoint.""")
-
+tf.app.flags.DEFINE_integer('checkpoint_step', 5000,
+                            """Number of steps to save summary.""")
 
 tf.app.flags.DEFINE_integer('summary_step', 100,
                             """Number of steps to save summary.""")
-tf.app.flags.DEFINE_integer('checkpoint_step', 5000,
-                            """Number of steps to save summary.""")
+
 tf.app.flags.DEFINE_string('gpu', '1', """gpu id.""")
 
+
 def train():
+    
     """Train SqueezeSeg model"""
     assert FLAGS.dataset == 'KITTI', \
         'Currently only support KITTI dataset'
-    
     os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
     
+
     tf.reset_default_graph()
     
     with tf.Graph().as_default():
         
-        assert FLAGS.net == 'squeezeSeg', \
-            'Selected neural net architecture not supported: {}'.format(FLAGS.net)
-        
         if FLAGS.net == 'squeezeSeg':
             mc = alibaba_squeezeSeg_config()
             mc.PRETRAINED_MODEL_PATH = FLAGS.pretrained_model_path
-            
             model = SqueezeSeg(mc)
             
-        
         imdb = kitti(FLAGS.image_set, FLAGS.data_path, mc)
+        
         print("\n data path: " + imdb._ali_path)
         print("train_dir :" + FLAGS.train_dir +'\n')
-        
+    
 
         # saver = tf.train.Saver(tf.all_variables())
         saver = tf.train.Saver(model.model_params)
+        
         summary_op = tf.summary.merge_all()
-        
-        # vars = tf.initialize_all_variables()
-        vars = tf.global_variables_initializer()
-        
         sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-        sess.run(vars)
         
 
-        initial_step = 0
         ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
 
-        # if ckpt and ckpt.model_checkpoint_path:
-        #     saver.restore(sess, ckpt.model_checkpoint_path)
-        #     steps = ckpt.model_checkpoint_path.rsplit('-', 1)
-        #     print(steps)
-        #     initial_step = int(steps[-1])
-        #     print("current setp is %d" % initial_step)
-        # else:
-        #     # saver.restore(sess, '../data/SqueezeSeg/model_with_no_CLASS-23000')
-        #     saver.restore(sess, '../data/SqueezeSeg/model.ckpt-23000')
-        #     pass
-
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            initial_step = int(ckpt.model_checkpoint_path.rsplit('-', 1)[-1])
+        else:
+            initial_step = 0
+            # vars = tf.initialize_all_variables()
+            
+        print("start step is %d" % initial_step)
+        
         summary_writer = tf.summary.FileWriter(FLAGS.train_dir, sess.graph)
-
+        vars = tf.global_variables_initializer()
+        sess.run(vars)
+        
+        
         def enqueue(sess, coord):
             with coord.stop_on_exception():
                 while not coord.should_stop():
@@ -133,7 +119,7 @@ def train():
         
         
         try:
-            for step in xrange(FLAGS.max_steps):
+            for step in range(initial_step, FLAGS.max_steps):
                 start_time = time.time()
                 
                 if step % FLAGS.summary_step == 0 or step == FLAGS.max_steps-1:
@@ -225,11 +211,12 @@ def train():
 
 
 def main(argv=None):  # pylint: disable=unused-argument
+    
     # if tf.gfile.Exists(FLAGS.train_dir):
     #     tf.gfile.DeleteRecursively(FLAGS.train_dir)
-    # tf.gfile.MakeDirs(FLAGS.train_dir)
+    
+    tf.gfile.MakeDirs(FLAGS.train_dir)
     train()
-
 
 if __name__ == '__main__':
     tf.app.run()

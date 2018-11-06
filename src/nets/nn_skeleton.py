@@ -226,7 +226,28 @@ class ModelSkeleton:
         
         self.iou_summary_placeholders = iou_summary_placeholders
         self.iou_summary_ops = iou_summary_ops
-    
+
+    def _activation_summary(self, x, layer_name):
+        """Helper to create summaries for activations.
+
+        Args:
+          x: layer output tensor
+          layer_name: name of the layer
+        Returns:
+          nothing
+        """
+        with tf.variable_scope('activation_summary') as scope:
+            tf.summary.histogram(layer_name, x)
+            tf.summary.scalar(layer_name + '/sparsity', tf.nn.zero_fraction(x))
+            tf.summary.scalar(layer_name + '/average', tf.reduce_mean(x))
+            tf.summary.scalar(layer_name + '/max', tf.reduce_max(x))
+            tf.summary.scalar(layer_name + '/min', tf.reduce_min(x))
+
+
+
+#############################################################################################
+
+
     def _conv_bn_layer(
             self, inputs, conv_param_name, bn_param_name, scale_param_name, filters,
             size, stride, padding='SAME', freeze=False, relu=True,
@@ -909,19 +930,3 @@ class ModelSkeleton:
             )
         
         return out
-    
-    def _activation_summary(self, x, layer_name):
-        """Helper to create summaries for activations.
-    
-        Args:
-          x: layer output tensor
-          layer_name: name of the layer
-        Returns:
-          nothing
-        """
-        with tf.variable_scope('activation_summary') as scope:
-            tf.summary.histogram(layer_name, x)
-            tf.summary.scalar(layer_name+'/sparsity', tf.nn.zero_fraction(x))
-            tf.summary.scalar(layer_name+'/average', tf.reduce_mean(x))
-            tf.summary.scalar(layer_name+'/max', tf.reduce_max(x))
-            tf.summary.scalar(layer_name+'/min', tf.reduce_min(x))
