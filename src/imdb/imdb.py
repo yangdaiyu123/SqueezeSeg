@@ -13,7 +13,7 @@ import tensorflow as tf
 from utils.util import *
 from tools.transfer import *
 from config.project_config import *
-
+from nodes import loader
 
 class imdb(object):
     """Image database."""
@@ -95,6 +95,8 @@ class imdb(object):
                 .astype(np.float32, copy=False)
             
             # # transform data
+            # ld = loader()
+            # record = ld.pto_depth_map(record)
             # record = trainging_data(record)
             
             # [::-1] ----> [-1:-len()-1:-1] reverse

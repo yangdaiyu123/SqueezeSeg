@@ -4,7 +4,7 @@ import tensorflow as tf
 DEBUG = True
 
 DATA_WORKING_PATH       = "npy360_full"
-TRAINING_TOTAL_COUNT    = 20000
+TRAINING_TOTAL_COUNT    = 27000
 EVALUATION_TOTAL_COUNT  = 2000
 
 TESTING_MODEL_PATH = "../scripts/log/train8/model.ckpt-29000"

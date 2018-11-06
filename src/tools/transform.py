@@ -159,49 +159,6 @@ def transform_training_npy(rootpath="", angle=90, debug=False):
                 if np.shape(formatdata) == (64, 512, 6):
                     print '%s 已生成' % npypath
 
-#
-def transform_8_to_4_npy(savepath="", angle=90, debug=False):
-    print savepath
-    
-    if angle == 90:
-        source_path = "/home/mengweiliang/disk15/df314/training/npy"
-    elif angle == 180:
-        source_path = "/home/mengweiliang/disk15/df314/training/npy180"
-    elif angle == 360:
-        source_path = "/home/mengweiliang/disk15/df314/training/npy360"
-
-    inputTool = InputData(source_path)
-    # filesname = inputTool.load_file_names(subpath="")
-    
-    for i in range(50000):
-    
-        filename = 'channelVELO_TOP_0000_%05d.npy' % (i+1)
-        
-        filePath = os.path.join(source_path, filename)
-        save_path = os.path.join(savepath, "{}-{}.npy".format(filename[:-4], angle))
-        
-        if os.path.exists(save_path):
-            print(save_path)
-            continue
-
-        def label_trans(x, y, label):
-            
-            if label == 3 or label == 4:
-                npydata[x][y][5] = 1
-            elif label == 1 or label == 2:
-                npydata[x][y][5] = 3
-            elif label == 5 or label == 6 or label == 7:
-                npydata[x][y][5] = 2
-            else:
-                npydata[x][y][5] = 0
-
-        # transform data
-        npydata = np.load(filePath)
-        [label_trans(x, y, npydata[x][y][5]) for x in range(64) for y in range(512)]
-        
-        # save data
-        if not os.path.exists(save_path):
-            np.save(save_path, npydata)
 
     
                 

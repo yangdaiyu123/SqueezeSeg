@@ -7,7 +7,6 @@ import pandas as pd
 import cmath, math
 import time
 
-
 class OutputData(object):
     
     @property
@@ -355,7 +354,7 @@ class InputData(object):
             image[xp, yp, 5] = label[index]
             
 
-        ignore_accuracy = 0.05
+        ignore_accuracy = 0.005
         for i in range(len(x)):
             
             if abs(x[i]) < ignore_accuracy: continue
@@ -400,8 +399,6 @@ if __name__ == '__main__':
     
     if not slow:
         formatdata = compontent.generate_np_format(result, statistic=True)
-    
-    
     else:
         formatdata = compontent.generate_image_np(result, debug=True)
 
@@ -419,9 +416,5 @@ if __name__ == '__main__':
     print '文件转换已完成！'
     print np.shape(npy)
     
-    # testnp = np.zeros((2, 5, 4))
-    # print testnp
-    # testnp[1, 3, 3] = 9
-    # print testnp
+
     
-# '''

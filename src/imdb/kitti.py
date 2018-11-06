@@ -44,9 +44,9 @@ class kitti(imdb):
     # 新路径, 面向alibaba数据的
     def _lidar_2d_new_path_at(self, idx, angle=90):
         
-        path = self._ali_path + '/channelVELO_TOP_0000_%05d-%d.npy' % (int(idx), int(angle))
-        
         # npy_cluster deprecated
+        #
+        #
         if self._work_dir == 'npy_origin' or \
             self._work_dir == 'npy_whole' or \
             self._work_dir == 'npy' or \
@@ -55,7 +55,10 @@ class kitti(imdb):
             self._work_dir == 'npy360_full':
             
             path =  self._ali_path + '/channelVELO_TOP_0000_%05d.npy' % (int(idx))
-        
+        else:
+            
+            path = self._ali_path + '/channelVELO_TOP_0000_%05d-%d.npy' % (int(idx), int(angle))
+            
         assert os.path.exists(path), 'File does not exist: {}'.format(path)
         
         return path
@@ -69,26 +72,6 @@ class kitti(imdb):
 
         return idxs
     
-    # def _load_image_set_idx(self):
-    #     image_set_file = os.path.join(
-    #         self._data_root_path, 'ImageSet', self._image_set+'.txt')
-    #     assert os.path.exists(image_set_file), \
-    #         'File does not exist: {}'.format(image_set_file)
-    #
-    #     with open(image_set_file) as f:
-    #         image_idx = [x.strip() for x in f.readlines()]
-    #     return image_idx
-    #
-    #
-    # def _lidar_2d_path_at(self, idx):
-    #     if idx[:4] == 'gta_':
-    #         lidar_2d_path = os.path.join(self._gta_2d_path, idx+'.npy')
-    #     else:
-    #         lidar_2d_path = os.path.join(self._lidar_2d_path, idx+'.npy')
-    #
-    #     assert os.path.exists(lidar_2d_path), \
-    #         'File does not exist: {}'.format(lidar_2d_path)
-    #     return lidar_2d_path
     
     
     

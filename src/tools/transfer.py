@@ -90,6 +90,21 @@ def testing_data(fnpy):
     
     return _tranfrom_data(fnpy)[:, :, :]
 
+def _pto_depth_map(fnpy):
+    
+    assert type(fnpy) == np.ndarray, "source is not a ndarray type!!!"
+    data = fnpy
+    
+    x = data[:, 0]
+    y = data[:, 1]
+    z = data[:, 2]
+    
+    i = data[:, 3]
+    # d =
+    
+    
+    
+
 def _tranfrom_data(fnpy):
     
     assert type(fnpy) == np.ndarray, "source is not a ndarray type!!!"
