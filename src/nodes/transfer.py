@@ -102,8 +102,6 @@ def _pto_depth_map(fnpy):
     i = data[:, 3]
     # d =
     
-    
-    
 
 def _tranfrom_data(fnpy):
     

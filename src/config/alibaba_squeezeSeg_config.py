@@ -43,7 +43,7 @@ def alibaba_squeezeSeg_config():
     #                              [0.66, 0.55, 0.71],
     #                              [0.58, 0.72, 0.88]])
 
-    asc.BATCH_SIZE = 32
+    asc.BATCH_SIZE = 16
     asc.AZIMUTH_LEVEL = 512
     asc.ZENITH_LEVEL = 64
 
@@ -72,11 +72,14 @@ def alibaba_squeezeSeg_config():
 
     asc.CLS_LOSS_COEF = 15.0
     asc.WEIGHT_DECAY = 0.0001 # 0.0001
+    
     asc.LEARNING_RATE = 0.01 # origin 0.01
-    asc.DECAY_STEPS = 10000
+    asc.DECAY_STEPS = 1000 # tf.train.exponential_decay
+    asc.LR_DECAY_FACTOR = 0.5
+    
     asc.MAX_GRAD_NORM = 1.0
     asc.MOMENTUM = 0.9
-    asc.LR_DECAY_FACTOR = 0.5
+    
 
     asc.DATA_AUGMENTATION = False
     asc.RANDOM_FLIPPING = False

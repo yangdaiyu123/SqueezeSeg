@@ -376,8 +376,7 @@ class ModelSkeleton:
                 kernel_val = np.transpose(cw[layer_name][0], [2,3,1,0])
                 bias_val = cw[layer_name][1]
                 # check the shape
-                inputs_update = inputs[:,:,:, 0:5]
-                if (kernel_val.shape == (size, size, inputs_update.get_shape().as_list()[-1], filters)) \
+                if (kernel_val.shape == (size, size, inputs.get_shape().as_list()[-1], filters)) \
                         and (bias_val.shape == (filters, )):
                     use_pretrained_param = True
                 else:

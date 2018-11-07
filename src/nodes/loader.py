@@ -59,46 +59,52 @@ class loader(object):
         # np.deg2rad()
         # np.rad2deg()
         depth_map = np.zeros((H, W, C))
-
-        def store_image(image, index):
-            # print (theta[index], phi[index])
-    
-            xp = int(tp[index])
-            yp = int(pp[index])
-    
-            image[xp, yp, 0:3] = [x[index], y[index], z[index]]
-    
-            image[xp, yp, 3] = ii[index]
-            image[xp, yp, 4] = d[index]
-            image[xp, yp, 5] = l[index]
-
-        ignore_accuracy = 0.05
         
-        for i in range(len(x)):
-    
-            if abs(x[i]) < ignore_accuracy: continue
-            if abs(y[i]) < ignore_accuracy: continue
-    
-            xyz = depth_map[tp[i], pp[i], 0:3]
-    
-            label = depth_map[tp[i], pp[i], 5]
-            dis = depth_map[tp[i], pp[i], 4]
-    
-            if self.isempty(xyz):
-                store_image(depth_map, i)
-    
-            # 点上是标签0的被替换
-            elif label == 0 and l[i] != 0:
-                store_image(depth_map, i)
-    
-            # 同一个标签近的值
-            elif l[i] == label and d[i] < dis:
-                store_image(depth_map, i)
-    
-            else:
-                store_image(depth_map, i)
-
+        depth_map[tp, pp, 0] = x
+        depth_map[tp, pp, 1] = y
+        depth_map[tp, pp, 2] = z
+        depth_map[tp, pp, 3] = ii
+        depth_map[tp, pp, 4] = d
+        depth_map[tp, pp, 5] = l
         
+        # def store_image(image, index):
+        #     # print (theta[index], phi[index])
+        #
+        #     xp = int(tp[index])
+        #     yp = int(pp[index])
+        #
+        #     image[xp, yp, 0:3] = [x[index], y[index], z[index]]
+        #
+        #     image[xp, yp, 3] = ii[index]
+        #     image[xp, yp, 4] = d[index]
+        #     image[xp, yp, 5] = l[index]
+        #
+        # ignore_accuracy = 0.05
+        #
+        # for i in range(len(x)):
+        #
+        #     if abs(x[i]) < ignore_accuracy: continue
+        #     if abs(y[i]) < ignore_accuracy: continue
+        #
+        #     xyz = depth_map[tp[i], pp[i], 0:3]
+        #
+        #     label = depth_map[tp[i], pp[i], 5]
+        #     dis = depth_map[tp[i], pp[i], 4]
+        #
+        #     if self.isempty(xyz):
+        #         store_image(depth_map, i)
+        #
+        #     # 点上是标签0的被替换
+        #     elif label == 0 and l[i] != 0:
+        #         store_image(depth_map, i)
+        #
+        #     # 同一个标签近的值
+        #     elif l[i] == label and d[i] < dis:
+        #         store_image(depth_map, i)
+        #
+        #     else:
+        #         store_image(depth_map, i)
+
         return  depth_map
 
 if __name__ == '__main__':

@@ -17,9 +17,17 @@ import tensorflow as tf
 from nets.nn_skeleton import ModelSkeleton
 
 class SqueezeSeg(ModelSkeleton):
+    
+    @property
+    def gpu_id(self):
+        return self._gpu_id
+    
     def __init__(self, mc, gpu_id=0):
+        
         with tf.device('/gpu:{}'.format(gpu_id)):
             ModelSkeleton.__init__(self, mc)
+            
+            self._gpu_id = gpu_id
             
             self._add_forward_graph()
             
@@ -34,12 +42,12 @@ class SqueezeSeg(ModelSkeleton):
         """NN architecture."""
         
         mc = self.mc
+        
         if mc.LOAD_PRETRAINED_MODEL:
             assert tf.gfile.Exists(mc.PRETRAINED_MODEL_PATH), \
                 'Cannot find pretrained model at the given path:' \
                 '  {}'.format(mc.PRETRAINED_MODEL_PATH)
             self.caffemodel_weight = joblib.load(mc.PRETRAINED_MODEL_PATH)
-        
         
         
         conv1 = self._conv_layer(
@@ -111,6 +119,10 @@ class SqueezeSeg(ModelSkeleton):
             sizes=[mc.LCN_HEIGHT, mc.LCN_WIDTH], num_iterations=mc.RCRF_ITER,
             padding='SAME'
         )
+    
+    
+    ###############################################################################
+    
     
     def _fire_layer(self, layer_name, inputs, s1x1, e1x1, e3x3, stddev=0.001,
                     freeze=False):

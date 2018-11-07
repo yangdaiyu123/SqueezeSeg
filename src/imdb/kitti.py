@@ -47,6 +47,7 @@ class kitti(imdb):
         # npy_cluster deprecated
         #
         #
+        
         if self._work_dir == 'npy_origin' or \
             self._work_dir == 'npy_whole' or \
             self._work_dir == 'npy' or \

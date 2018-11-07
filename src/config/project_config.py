@@ -3,13 +3,13 @@ import tensorflow as tf
 
 DEBUG = True
 
-DATA_WORKING_PATH       = "npy360_full"
-TRAINING_TOTAL_COUNT    = 27000
-EVALUATION_TOTAL_COUNT  = 2000
+DATA_WORKING_PATH       = "npy_whole"
+TRAINING_TOTAL_COUNT    = 30000
+EVALUATION_TOTAL_COUNT  = 3000
 
 TESTING_MODEL_PATH = "../scripts/log/train8/model.ckpt-29000"
 
-MODEL_TRAIN_DIR     = "../scripts/log/train8_360"
+MODEL_TRAIN_DIR     = "../scripts/log/train_whole"
 MODEL_CHECKPOINT    = MODEL_TRAIN_DIR + "/model.ckpt-26000"
 
 FLAGS = tf.app.flags.FLAGS
@@ -33,7 +33,7 @@ tf.app.flags.DEFINE_string( 'checkpoint', MODEL_CHECKPOINT,
 
 
 # ../scripts/log/answers/
-tf.app.flags.DEFINE_string('out_dir', '../scripts/log/answers_8/',
+tf.app.flags.DEFINE_string('out_dir', '../scripts/log/answers_whole/',
                            """Directory to dump output.""")
 
 tf.app.flags.DEFINE_string('eval_dir', '../scripts/log/eval_val8',
